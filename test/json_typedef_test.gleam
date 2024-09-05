@@ -91,6 +91,12 @@ pub fn decode_type_unknown_test() {
   |> birdie.snap("decode_type_object_test")
 }
 
+pub fn decode_type_invalid_test() {
+  "{ \"type\": 1 }"
+  |> test_decode
+  |> birdie.snap("decode_type_invalid_test")
+}
+
 pub fn decode_enum_season_test() {
   "{ \"enum\": [\"Spring\", \"Summer\", \"Autumn\", \"Winter\"] }"
   |> test_decode
@@ -137,4 +143,68 @@ pub fn decode_values_ref_test() {
   "{ \"values\": { \"ref\": \"pokemon\" } }"
   |> test_decode
   |> birdie.snap("decode_values_ref_test")
+}
+
+pub fn decode_discriminator_event_type_test() {
+  "{
+    \"discriminator\": \"eventType\",
+    \"mapping\": {
+        \"USER_CREATED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" }
+            }
+        },
+        \"USER_PAYMENT_PLAN_CHANGED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" },
+                \"plan\": { \"enum\": [\"FREE\", \"PAID\"]}
+            }
+        },
+        \"USER_DELETED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" },
+                \"softDelete\": { \"type\": \"boolean\" }
+            }
+        }
+    }
+}"
+  |> test_decode
+  |> birdie.snap("decode_discriminator_event_type_test")
+}
+
+pub fn decode_properties_test() {
+  "{
+    \"properties\": {
+        \"name\": { \"type\": \"string\" },
+        \"isAdmin\": { \"type\": \"boolean\" }
+    }
+}"
+  |> test_decode
+  |> birdie.snap("decode_properties_test")
+}
+
+pub fn decode_properties_optional_test() {
+  "{
+    \"properties\": {
+        \"name\": { \"type\": \"string\" },
+        \"isAdmin\": { \"type\": \"boolean\" }
+    },
+    \"optionalProperties\": {
+        \"middleName\": { \"type\": \"string\" }
+    }
+}"
+  |> test_decode
+  |> birdie.snap("decode_properties_optional_test")
+}
+
+pub fn decode_properties_additional_test() {
+  "{
+    \"properties\": {
+        \"name\": { \"type\": \"string\" },
+        \"isAdmin\": { \"type\": \"boolean\" }
+    },
+    \"additionalProperties\": true
+}"
+  |> test_decode
+  |> birdie.snap("decode_properties_additional_test")
 }

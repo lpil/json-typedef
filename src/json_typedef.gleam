@@ -67,7 +67,7 @@ pub type PropertiesSchema {
   PropertiesSchema(
     properties: List(#(String, Schema)),
     optional_properties: List(#(String, Schema)),
-    extra_properties: Bool,
+    additional_properties: Bool,
   )
 }
 
@@ -96,14 +96,17 @@ fn properties_schema_to_json(schema: PropertiesSchema) -> List(#(String, Json)) 
     )
   }
 
-  let PropertiesSchema(properties:, optional_properties:, extra_properties:) =
-    schema
+  let PropertiesSchema(
+    properties:,
+    optional_properties:,
+    additional_properties:,
+  ) = schema
 
   let data = []
 
-  let data = case extra_properties {
+  let data = case additional_properties {
     False -> data
-    _ -> [#("extraProperties", json.bool(True)), ..data]
+    _ -> [#("additionalProperties", json.bool(True)), ..data]
   }
 
   let data = case optional_properties {
@@ -174,6 +177,18 @@ fn decode_schema(data: Dynamic) -> Result(Schema, List(dynamic.DecodeError)) {
     |> result.lazy_or(fn() { key_decoder(data, "ref", decode_ref) })
     |> result.lazy_or(fn() { key_decoder(data, "values", decode_values) })
     |> result.lazy_or(fn() { key_decoder(data, "elements", decode_elements) })
+    |> result.lazy_or(fn() {
+      key_decoder(data, "discriminator", decode_discriminator)
+    })
+    |> result.lazy_or(fn() {
+      key_decoder(data, "properties", decode_properties)
+    })
+    |> result.lazy_or(fn() {
+      key_decoder(data, "extraProperties", decode_properties)
+    })
+    |> result.lazy_or(fn() {
+      key_decoder(data, "additionalProperties", decode_properties)
+    })
     |> result.unwrap(fn() { decode_empty(data) })
 
   decoder()
@@ -191,14 +206,66 @@ fn key_decoder(
   }
 }
 
-// TODO: properties
-// TODO: discriminator
+fn decode_discriminator(
+  tag: Dynamic,
+  data: Dict(String, Dynamic),
+) -> Result(Schema, List(dynamic.DecodeError)) {
+  use tag <- result.try(dynamic.string(tag) |> push_path("discriminator"))
+  use mapping <- result.try(case dict.get(data, "mapping") {
+    Ok(mapping) -> Ok(mapping)
+    Error(_) -> Error([dynamic.DecodeError("field", "nothing", ["mapping"])])
+  })
+  use properties <- result.try(
+    decode_object_as_list(mapping, decode_properties_schema)
+    |> push_path("mapping"),
+  )
+  Ok(Discriminator(tag:, mapping: properties))
+}
+
+fn decode_object_as_list(
+  data: Dynamic,
+  inner: dynamic.Decoder(t),
+) -> Result(List(#(String, t)), List(dynamic.DecodeError)) {
+  dynamic.dict(dynamic.string, inner)(data)
+  |> result.map(dict.to_list)
+}
+
+fn decode_properties(
+  _tag: Dynamic,
+  data: Dict(String, Dynamic),
+) -> Result(Schema, List(dynamic.DecodeError)) {
+  dynamic.from(data)
+  |> decode_properties_schema
+  |> result.map(Properties)
+}
+
+fn decode_properties_schema(
+  data: Dynamic,
+) -> Result(PropertiesSchema, List(dynamic.DecodeError)) {
+  let field = fn(name, data) {
+    case dynamic.field(name, dynamic.dynamic)(data) {
+      Ok(d) -> decode_object_as_list(d, decode_schema) |> push_path(name)
+      Error(_) -> Ok([])
+    }
+  }
+  dynamic.decode3(
+    PropertiesSchema,
+    field("properties", _),
+    field("optionalProperties", _),
+    fn(d) {
+      case dynamic.field("additionalProperties", dynamic.dynamic)(d) {
+        Ok(d) -> dynamic.bool(d) |> push_path("additionalProperties")
+        Error(_) -> Ok(False)
+      }
+    },
+  )(data)
+}
 
 fn decode_type(
   type_: Dynamic,
   _data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
-  use type_ <- result.try(dynamic.string(type_))
+  use type_ <- result.try(dynamic.string(type_) |> push_path("type"))
 
   case type_ {
     "boolean" -> Ok(Type(Boolean))

@@ -1,0 +1,73 @@
+---
+version: 1.2.1
+title: decode_discriminator_event_type_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_discriminator_event_type_test
+---
+{
+    "discriminator": "eventType",
+    "mapping": {
+        "USER_CREATED": {
+            "properties": {
+                "id": { "type": "string" }
+            }
+        },
+        "USER_PAYMENT_PLAN_CHANGED": {
+            "properties": {
+                "id": { "type": "string" },
+                "plan": { "enum": ["FREE", "PAID"]}
+            }
+        },
+        "USER_DELETED": {
+            "properties": {
+                "id": { "type": "string" },
+                "softDelete": { "type": "boolean" }
+            }
+        }
+    }
+}
+
+Ok(RootSchema(
+  [],
+  Discriminator(
+    "eventType",
+    [
+      #(
+        "USER_CREATED",
+        PropertiesSchema(
+          [#("id", Type(String))],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "USER_DELETED",
+        PropertiesSchema(
+          [
+            #("id", Type(String)),
+            #(
+              "softDelete",
+              Type(Boolean),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "USER_PAYMENT_PLAN_CHANGED",
+        PropertiesSchema(
+          [
+            #("id", Type(String)),
+            #(
+              "plan",
+              Enum(["FREE", "PAID"]),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ],
+  ),
+))

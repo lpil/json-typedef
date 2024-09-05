@@ -1,0 +1,27 @@
+---
+version: 1.2.1
+title: decode_properties_optional_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_properties_optional_test
+---
+{
+    "properties": {
+        "name": { "type": "string" },
+        "isAdmin": { "type": "boolean" }
+    },
+    "optionalProperties": {
+        "middleName": { "type": "string" }
+    }
+}
+
+Ok(RootSchema(
+  [],
+  Properties(PropertiesSchema(
+    [
+      #("isAdmin", Type(Boolean)),
+      #("name", Type(String)),
+    ],
+    [#("middleName", Type(String))],
+    False,
+  )),
+))
