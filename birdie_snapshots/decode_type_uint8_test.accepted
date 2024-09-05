@@ -1,0 +1,9 @@
+---
+version: 1.2.1
+title: decode_type_uint8_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_type_uint8_test
+---
+{ "type": "uint8" }
+
+Ok(RootSchema([], Type(UInt8)))

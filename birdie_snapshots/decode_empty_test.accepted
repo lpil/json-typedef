@@ -1,0 +1,9 @@
+---
+version: 1.2.1
+title: decode_empty_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_empty_test
+---
+{}
+
+Ok(RootSchema([], Empty))

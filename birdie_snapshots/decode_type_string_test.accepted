@@ -1,0 +1,9 @@
+---
+version: 1.2.1
+title: decode_type_string_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_type_string_test
+---
+{ "type": "string" }
+
+Ok(RootSchema([], Type(String)))

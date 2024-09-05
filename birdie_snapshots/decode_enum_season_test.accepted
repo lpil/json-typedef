@@ -1,0 +1,17 @@
+---
+version: 1.2.1
+title: decode_enum_season_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_enum_season_test
+---
+{ "enum": ["Spring", "Summer", "Autumn", "Winter"] }
+
+Ok(RootSchema(
+  [],
+  Enum([
+    "Spring",
+    "Summer",
+    "Autumn",
+    "Winter",
+  ]),
+))
