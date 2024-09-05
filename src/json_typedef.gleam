@@ -161,10 +161,10 @@ fn discriminator_to_json(
 }
 
 pub fn decoder(data: Dynamic) -> Result(RootSchema, List(dynamic.DecodeError)) {
-  dynamic.decode2(RootSchema, fn(_) { Ok([]) }, schema_decoder)(data)
+  dynamic.decode2(RootSchema, fn(_) { Ok([]) }, decode_schema)(data)
 }
 
-fn schema_decoder(data: Dynamic) -> Result(Schema, List(dynamic.DecodeError)) {
+fn decode_schema(data: Dynamic) -> Result(Schema, List(dynamic.DecodeError)) {
   use data <- result.try(dynamic.dict(dynamic.string, dynamic.dynamic)(data))
   // TODO: metadata
   // TODO: nullable
@@ -172,6 +172,8 @@ fn schema_decoder(data: Dynamic) -> Result(Schema, List(dynamic.DecodeError)) {
     key_decoder(data, "type", decode_type)
     |> result.lazy_or(fn() { key_decoder(data, "enum", decode_enum) })
     |> result.lazy_or(fn() { key_decoder(data, "ref", decode_ref) })
+    |> result.lazy_or(fn() { key_decoder(data, "values", decode_values) })
+    |> result.lazy_or(fn() { key_decoder(data, "elements", decode_elements) })
     |> result.unwrap(fn() { decode_empty(data) })
 
   decoder()
@@ -190,8 +192,6 @@ fn key_decoder(
 }
 
 // TODO: properties
-// TODO: elements
-// TODO: values
 // TODO: discriminator
 
 fn decode_type(
@@ -241,6 +241,24 @@ fn decode_empty(
     0 -> Ok(Empty)
     _ -> Error([dynamic.DecodeError("Schema", "Dict", [])])
   }
+}
+
+fn decode_values(
+  values: Dynamic,
+  _data: Dict(String, Dynamic),
+) -> Result(Schema, List(dynamic.DecodeError)) {
+  decode_schema(values)
+  |> push_path("values")
+  |> result.map(Values)
+}
+
+fn decode_elements(
+  elements: Dynamic,
+  _data: Dict(String, Dynamic),
+) -> Result(Schema, List(dynamic.DecodeError)) {
+  decode_schema(elements)
+  |> push_path("elements")
+  |> result.map(Elements)
 }
 
 fn push_path(

@@ -114,3 +114,27 @@ pub fn decode_ref_pokemon_test() {
   |> test_decode
   |> birdie.snap("decode_ref_pokemon_test")
 }
+
+pub fn decode_elements_string_test() {
+  "{ \"elements\": { \"type\": \"string\" } }"
+  |> test_decode
+  |> birdie.snap("decode_elements_string_test")
+}
+
+pub fn decode_elements_ref_test() {
+  "{ \"elements\": { \"ref\": \"pokemon\" } }"
+  |> test_decode
+  |> birdie.snap("decode_elements_ref_test")
+}
+
+pub fn decode_values_string_test() {
+  "{ \"values\": { \"type\": \"string\" } }"
+  |> test_decode
+  |> birdie.snap("decode_values_string_test")
+}
+
+pub fn decode_values_ref_test() {
+  "{ \"values\": { \"ref\": \"pokemon\" } }"
+  |> test_decode
+  |> birdie.snap("decode_values_ref_test")
+}

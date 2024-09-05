@@ -1,0 +1,12 @@
+---
+version: 1.2.1
+title: decode_values_ref_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_values_ref_test
+---
+{ "values": { "ref": "pokemon" } }
+
+Ok(RootSchema(
+  [],
+  Values(Ref("pokemon")),
+))
