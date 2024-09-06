@@ -6,4 +6,7 @@ test_name: decode_type_uint32_test
 ---
 { "type": "uint32" }
 
-Ok(RootSchema([], Type(False, UInt32)))
+Ok(RootSchema(
+  [],
+  Type(False, [], UInt32),
+))

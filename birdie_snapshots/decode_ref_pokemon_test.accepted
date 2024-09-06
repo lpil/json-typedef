@@ -6,4 +6,7 @@ test_name: decode_ref_pokemon_test
 ---
 { "ref": "pokemon" }
 
-Ok(RootSchema([], Ref(False, "pokemon")))
+Ok(RootSchema(
+  [],
+  Ref(False, [], "pokemon"),
+))

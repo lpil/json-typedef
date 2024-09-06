@@ -1,4 +1,5 @@
 import birdie
+import gleam/dynamic
 import gleam/json
 import gleeunit
 import json_typedef.{RootSchema, Type}
@@ -222,15 +223,38 @@ pub fn decode_type_nullable_false_test() {
 }
 
 pub fn to_json_type_nullable_test() {
-  RootSchema([], Type(nullable: True, type_: json_typedef.String))
+  RootSchema([], Type(nullable: True, metadata: [], type_: json_typedef.String))
   |> json_typedef.to_json
   |> json.to_string
   |> birdie.snap("to_json_type_nullable_test")
 }
 
 pub fn to_json_type_not_nullable_test() {
-  RootSchema([], Type(nullable: False, type_: json_typedef.String))
+  RootSchema(
+    [],
+    Type(nullable: False, metadata: [], type_: json_typedef.String),
+  )
   |> json_typedef.to_json
   |> json.to_string
   |> birdie.snap("to_json_type_not_nullable_test")
+}
+
+pub fn decode_type_metadata_test() {
+  "{ \"type\": \"boolean\", \"metadata\": { \"documentation\": \"waddup\" } }"
+  |> test_decode
+  |> birdie.snap("decode_type_metadata_test")
+}
+
+pub fn to_json_type_metadata_test() {
+  RootSchema(
+    [],
+    Type(
+      nullable: False,
+      metadata: [#("documentation", dynamic.from("Hello, Joe!"))],
+      type_: json_typedef.String,
+    ),
+  )
+  |> json_typedef.to_json
+  |> json.to_string
+  |> birdie.snap("to_json_type_metadata_test")
 }

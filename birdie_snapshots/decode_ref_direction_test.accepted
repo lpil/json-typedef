@@ -8,5 +8,5 @@ test_name: decode_ref_direction_test
 
 Ok(RootSchema(
   [],
-  Ref(False, "direction"),
+  Ref(False, [], "direction"),
 ))

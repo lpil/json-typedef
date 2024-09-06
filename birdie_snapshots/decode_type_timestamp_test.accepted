@@ -8,5 +8,5 @@ test_name: decode_type_timestamp_test
 
 Ok(RootSchema(
   [],
-  Type(False, Timestamp),
+  Type(False, [], Timestamp),
 ))

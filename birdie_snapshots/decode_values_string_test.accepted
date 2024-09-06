@@ -8,5 +8,9 @@ test_name: decode_values_string_test
 
 Ok(RootSchema(
   [],
-  Values(False, Type(False, String)),
+  Values(
+    False,
+    [],
+    Type(False, [], String),
+  ),
 ))

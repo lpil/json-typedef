@@ -6,4 +6,7 @@ test_name: decode_type_boolean_test
 ---
 { "type": "boolean" }
 
-Ok(RootSchema([], Type(False, Boolean)))
+Ok(RootSchema(
+  [],
+  Type(False, [], Boolean),
+))

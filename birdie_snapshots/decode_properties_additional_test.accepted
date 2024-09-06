@@ -16,13 +16,17 @@ Ok(RootSchema(
   [],
   Properties(
     False,
+    [],
     PropertiesSchema(
       [
         #(
           "isAdmin",
-          Type(False, Boolean),
+          Type(False, [], Boolean),
         ),
-        #("name", Type(False, String)),
+        #(
+          "name",
+          Type(False, [], String),
+        ),
       ],
       [],
       True,

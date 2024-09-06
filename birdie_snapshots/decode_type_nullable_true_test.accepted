@@ -6,4 +6,7 @@ test_name: decode_type_nullable_true_test
 ---
 { "type": "boolean", "nullable": true }
 
-Ok(RootSchema([], Type(True, Boolean)))
+Ok(RootSchema(
+  [],
+  Type(True, [], Boolean),
+))

@@ -6,4 +6,7 @@ test_name: decode_type_int16_test
 ---
 { "type": "int16" }
 
-Ok(RootSchema([], Type(False, Int16)))
+Ok(RootSchema(
+  [],
+  Type(False, [], Int16),
+))

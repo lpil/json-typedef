@@ -1,0 +1,7 @@
+---
+version: 1.2.1
+title: to_json_type_metadata_test
+file: ./test/json_typedef_test.gleam
+test_name: to_json_type_metadata_test
+---
+{"metadata":{"documentation":"Hello, Joe!"},"type":"string"}

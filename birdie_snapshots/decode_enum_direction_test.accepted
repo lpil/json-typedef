@@ -8,5 +8,5 @@ test_name: decode_enum_direction_test
 
 Ok(RootSchema(
   [],
-  Enum(False, ["Up", "Down"]),
+  Enum(False, [], ["Up", "Down"]),
 ))

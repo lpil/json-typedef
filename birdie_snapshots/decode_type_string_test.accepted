@@ -6,4 +6,7 @@ test_name: decode_type_string_test
 ---
 { "type": "string" }
 
-Ok(RootSchema([], Type(False, String)))
+Ok(RootSchema(
+  [],
+  Type(False, [], String),
+))

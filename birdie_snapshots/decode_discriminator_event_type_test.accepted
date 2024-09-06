@@ -35,7 +35,12 @@ Ok(RootSchema(
       #(
         "USER_CREATED",
         PropertiesSchema(
-          [#("id", Type(False, String))],
+          [
+            #(
+              "id",
+              Type(False, [], String),
+            ),
+          ],
           [],
           False,
         ),
@@ -44,10 +49,13 @@ Ok(RootSchema(
         "USER_DELETED",
         PropertiesSchema(
           [
-            #("id", Type(False, String)),
+            #(
+              "id",
+              Type(False, [], String),
+            ),
             #(
               "softDelete",
-              Type(False, Boolean),
+              Type(False, [], Boolean),
             ),
           ],
           [],
@@ -58,11 +66,15 @@ Ok(RootSchema(
         "USER_PAYMENT_PLAN_CHANGED",
         PropertiesSchema(
           [
-            #("id", Type(False, String)),
+            #(
+              "id",
+              Type(False, [], String),
+            ),
             #(
               "plan",
               Enum(
                 False,
+                [],
                 ["FREE", "PAID"],
               ),
             ),

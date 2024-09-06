@@ -10,6 +10,7 @@ Ok(RootSchema(
   [],
   Enum(
     False,
+    [],
     [
       "Spring",
       "Summer",

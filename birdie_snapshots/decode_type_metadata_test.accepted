@@ -1,0 +1,16 @@
+---
+version: 1.2.1
+title: decode_type_metadata_test
+file: ./test/json_typedef_test.gleam
+test_name: decode_type_metadata_test
+---
+{ "type": "boolean", "metadata": { "documentation": "waddup" } }
+
+Ok(RootSchema(
+  [],
+  Type(
+    False,
+    [#("documentation", "waddup")],
+    Boolean,
+  ),
+))
