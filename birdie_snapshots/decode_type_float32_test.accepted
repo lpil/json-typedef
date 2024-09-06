@@ -6,4 +6,4 @@ test_name: decode_type_float32_test
 ---
 { "type": "float32" }
 
-Ok(RootSchema([], Type(Float32)))
+Ok(RootSchema([], Type(False, Float32)))

@@ -1,0 +1,7 @@
+---
+version: 1.2.1
+title: to_json_type_not_nullable_test
+file: ./test/json_typedef_test.gleam
+test_name: to_json_type_not_nullable_test
+---
+{"type":"string"}

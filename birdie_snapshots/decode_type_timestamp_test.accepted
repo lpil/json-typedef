@@ -6,4 +6,7 @@ test_name: decode_type_timestamp_test
 ---
 { "type": "timestamp" }
 
-Ok(RootSchema([], Type(Timestamp)))
+Ok(RootSchema(
+  [],
+  Type(False, Timestamp),
+))

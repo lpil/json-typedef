@@ -8,10 +8,13 @@ test_name: decode_enum_season_test
 
 Ok(RootSchema(
   [],
-  Enum([
-    "Spring",
-    "Summer",
-    "Autumn",
-    "Winter",
-  ]),
+  Enum(
+    False,
+    [
+      "Spring",
+      "Summer",
+      "Autumn",
+      "Winter",
+    ],
+  ),
 ))

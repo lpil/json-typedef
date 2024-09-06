@@ -8,5 +8,5 @@ test_name: decode_elements_ref_test
 
 Ok(RootSchema(
   [],
-  Elements(Ref("pokemon")),
+  Elements(False, Ref(False, "pokemon")),
 ))

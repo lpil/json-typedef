@@ -6,4 +6,7 @@ test_name: decode_ref_direction_test
 ---
 { "ref": "direction" }
 
-Ok(RootSchema([], Ref("direction")))
+Ok(RootSchema(
+  [],
+  Ref(False, "direction"),
+))

@@ -44,23 +44,23 @@ pub type Schema {
   Empty
   /// A simple built-in type. The type form is like a Java or TypeScript
   /// primitive type.
-  Type(Type)
+  Type(nullable: Bool, type_: Type)
   /// One of a fixed set of strings. The enum form is like a Java or TypeScript
   /// enum.
-  Enum(List(String))
+  Enum(nullable: Bool, variants: List(String))
   // The properties form is like a Java class or TypeScript interface.
-  Properties(PropertiesSchema)
+  Properties(nullable: Bool, schema: PropertiesSchema)
   /// A sequence of some other form. The elements form is like a Java `List<T>`
   /// or TypeScript `T[]`.
-  Elements(Schema)
+  Elements(nullable: Bool, schema: Schema)
   /// A dictionary with string keys and some form values. The values form is
   /// like a Java `Map<String, T>` or TypeScript `{ [key: string]: T}`.
-  Values(Schema)
+  Values(nullable: Bool, schema: Schema)
   /// The discriminator form is like a tagged union.
   Discriminator(tag: String, mapping: List(#(String, PropertiesSchema)))
   /// The ref form is for re-using schemas, usually so you can avoid repeating
   /// yourself.
-  Ref(String)
+  Ref(nullable: Bool, name: String)
 }
 
 pub type PropertiesSchema {
@@ -125,18 +125,30 @@ fn properties_schema_to_json(schema: PropertiesSchema) -> List(#(String, Json)) 
 fn schema_to_json(schema: Schema) -> List(#(String, Json)) {
   case schema {
     Empty -> []
-    Ref(name) -> [#("values", json.string(name))]
-    Type(t) -> type_to_json(t)
-    Enum(variants) -> [#("enum", json.array(variants, json.string))]
-    Values(schema) -> [#("values", json.object(schema_to_json(schema)))]
-    Elements(schema) -> [#("elements", json.object(schema_to_json(schema)))]
-    Properties(schema) -> properties_schema_to_json(schema)
+    Ref(nullable:, name:) ->
+      [#("values", json.string(name))]
+      |> add_nullable(nullable)
+    Type(nullable:, type_:) ->
+      [#("type", type_to_json(type_))]
+      |> add_nullable(nullable)
+    Enum(nullable:, variants:) ->
+      [#("enum", json.array(variants, json.string))]
+      |> add_nullable(nullable)
+    Values(nullable:, schema:) ->
+      [#("values", json.object(schema_to_json(schema)))]
+      |> add_nullable(nullable)
+    Elements(nullable:, schema:) ->
+      [#("elements", json.object(schema_to_json(schema)))]
+      |> add_nullable(nullable)
+    Properties(nullable:, schema:) ->
+      properties_schema_to_json(schema)
+      |> add_nullable(nullable)
     Discriminator(tag:, mapping:) -> discriminator_to_json(tag, mapping)
   }
 }
 
-fn type_to_json(t: Type) -> List(#(String, Json)) {
-  let t = case t {
+fn type_to_json(t: Type) -> Json {
+  json.string(case t {
     Boolean -> "boolean"
     Float32 -> "float32"
     Float64 -> "float64"
@@ -148,8 +160,7 @@ fn type_to_json(t: Type) -> List(#(String, Json)) {
     UInt16 -> "uint16"
     UInt32 -> "uint32"
     UInt8 -> "uint8"
-  }
-  [#("type", json.string(t))]
+  })
 }
 
 fn discriminator_to_json(
@@ -234,9 +245,10 @@ fn decode_properties(
   _tag: Dynamic,
   data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
+  use nullable <- result.try(get_nullable(data))
   dynamic.from(data)
   |> decode_properties_schema
-  |> result.map(Properties)
+  |> result.map(Properties(nullable, _))
 }
 
 fn decode_properties_schema(
@@ -263,42 +275,45 @@ fn decode_properties_schema(
 
 fn decode_type(
   type_: Dynamic,
-  _data: Dict(String, Dynamic),
+  data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
   use type_ <- result.try(dynamic.string(type_) |> push_path("type"))
+  use nullable <- result.try(get_nullable(data))
 
   case type_ {
-    "boolean" -> Ok(Type(Boolean))
-    "float32" -> Ok(Type(Float32))
-    "float64" -> Ok(Type(Float64))
-    "int16" -> Ok(Type(Int16))
-    "int32" -> Ok(Type(Int32))
-    "int8" -> Ok(Type(Int8))
-    "string" -> Ok(Type(String))
-    "timestamp" -> Ok(Type(Timestamp))
-    "uint16" -> Ok(Type(UInt16))
-    "uint32" -> Ok(Type(UInt32))
-    "uint8" -> Ok(Type(UInt8))
+    "boolean" -> Ok(Type(nullable, Boolean))
+    "float32" -> Ok(Type(nullable, Float32))
+    "float64" -> Ok(Type(nullable, Float64))
+    "int16" -> Ok(Type(nullable, Int16))
+    "int32" -> Ok(Type(nullable, Int32))
+    "int8" -> Ok(Type(nullable, Int8))
+    "string" -> Ok(Type(nullable, String))
+    "timestamp" -> Ok(Type(nullable, Timestamp))
+    "uint16" -> Ok(Type(nullable, UInt16))
+    "uint32" -> Ok(Type(nullable, UInt32))
+    "uint8" -> Ok(Type(nullable, UInt8))
     _ -> Error([dynamic.DecodeError("Type", "String", ["type"])])
   }
 }
 
 fn decode_enum(
   type_: Dynamic,
-  _data: Dict(String, Dynamic),
+  data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
+  use nullable <- result.try(get_nullable(data))
   dynamic.list(dynamic.string)(type_)
   |> push_path("enum")
-  |> result.map(Enum)
+  |> result.map(Enum(nullable, _))
 }
 
 fn decode_ref(
   type_: Dynamic,
-  _data: Dict(String, Dynamic),
+  data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
+  use nullable <- result.try(get_nullable(data))
   dynamic.string(type_)
   |> push_path("ref")
-  |> result.map(Ref)
+  |> result.map(Ref(nullable, _))
 }
 
 fn decode_empty(
@@ -312,20 +327,22 @@ fn decode_empty(
 
 fn decode_values(
   values: Dynamic,
-  _data: Dict(String, Dynamic),
+  data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
+  use nullable <- result.try(get_nullable(data))
   decode_schema(values)
   |> push_path("values")
-  |> result.map(Values)
+  |> result.map(Values(nullable, _))
 }
 
 fn decode_elements(
   elements: Dynamic,
-  _data: Dict(String, Dynamic),
+  data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
+  use nullable <- result.try(get_nullable(data))
   decode_schema(elements)
   |> push_path("elements")
-  |> result.map(Elements)
+  |> result.map(Elements(nullable, _))
 }
 
 fn push_path(
@@ -335,4 +352,23 @@ fn push_path(
   result.map_error(result, list.map(_, fn(e) {
     dynamic.DecodeError(..e, path: [segment, ..e.path])
   }))
+}
+
+fn get_nullable(
+  data: Dict(String, Dynamic),
+) -> Result(Bool, List(dynamic.DecodeError)) {
+  case dict.get(data, "nullable") {
+    Ok(data) -> dynamic.bool(data)
+    Error(_) -> Ok(False)
+  }
+}
+
+fn add_nullable(
+  data: List(#(String, Json)),
+  nullable: Bool,
+) -> List(#(String, Json)) {
+  case nullable {
+    False -> data
+    True -> [#("nullable", json.bool(True)), ..data]
+  }
 }

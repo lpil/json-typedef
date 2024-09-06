@@ -1,7 +1,7 @@
 import birdie
 import gleam/json
 import gleeunit
-import json_typedef
+import json_typedef.{RootSchema, Type}
 import pprint
 
 pub fn main() {
@@ -207,4 +207,30 @@ pub fn decode_properties_additional_test() {
 }"
   |> test_decode
   |> birdie.snap("decode_properties_additional_test")
+}
+
+pub fn decode_type_nullable_true_test() {
+  "{ \"type\": \"boolean\", \"nullable\": true }"
+  |> test_decode
+  |> birdie.snap("decode_type_nullable_true_test")
+}
+
+pub fn decode_type_nullable_false_test() {
+  "{ \"type\": \"boolean\", \"nullable\": false }"
+  |> test_decode
+  |> birdie.snap("decode_type_nullable_false_test")
+}
+
+pub fn to_json_type_nullable_test() {
+  RootSchema([], Type(nullable: True, type_: json_typedef.String))
+  |> json_typedef.to_json
+  |> json.to_string
+  |> birdie.snap("to_json_type_nullable_test")
+}
+
+pub fn to_json_type_not_nullable_test() {
+  RootSchema([], Type(nullable: False, type_: json_typedef.String))
+  |> json_typedef.to_json
+  |> json.to_string
+  |> birdie.snap("to_json_type_not_nullable_test")
 }

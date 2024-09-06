@@ -8,5 +8,5 @@ test_name: decode_elements_string_test
 
 Ok(RootSchema(
   [],
-  Elements(Type(String)),
+  Elements(False, Type(False, String)),
 ))

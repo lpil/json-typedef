@@ -6,4 +6,4 @@ test_name: decode_type_uint8_test
 ---
 { "type": "uint8" }
 
-Ok(RootSchema([], Type(UInt8)))
+Ok(RootSchema([], Type(False, UInt8)))

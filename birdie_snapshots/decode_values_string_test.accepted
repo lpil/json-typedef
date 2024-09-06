@@ -6,4 +6,7 @@ test_name: decode_values_string_test
 ---
 { "values": { "type": "string" } }
 
-Ok(RootSchema([], Values(Type(String))))
+Ok(RootSchema(
+  [],
+  Values(False, Type(False, String)),
+))

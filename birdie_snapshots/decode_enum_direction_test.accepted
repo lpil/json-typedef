@@ -6,4 +6,7 @@ test_name: decode_enum_direction_test
 ---
 { "enum": ["Up", "Down"] }
 
-Ok(RootSchema([], Enum(["Up", "Down"])))
+Ok(RootSchema(
+  [],
+  Enum(False, ["Up", "Down"]),
+))

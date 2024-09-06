@@ -14,12 +14,18 @@ test_name: decode_properties_additional_test
 
 Ok(RootSchema(
   [],
-  Properties(PropertiesSchema(
-    [
-      #("isAdmin", Type(Boolean)),
-      #("name", Type(String)),
-    ],
-    [],
-    True,
-  )),
+  Properties(
+    False,
+    PropertiesSchema(
+      [
+        #(
+          "isAdmin",
+          Type(False, Boolean),
+        ),
+        #("name", Type(False, String)),
+      ],
+      [],
+      True,
+    ),
+  ),
 ))

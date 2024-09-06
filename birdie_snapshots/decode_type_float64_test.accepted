@@ -6,4 +6,4 @@ test_name: decode_type_float64_test
 ---
 { "type": "float64" }
 
-Ok(RootSchema([], Type(Float64)))
+Ok(RootSchema([], Type(False, Float64)))
