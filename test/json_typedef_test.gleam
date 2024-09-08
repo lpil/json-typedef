@@ -439,3 +439,21 @@ pub fn decoder_type_elements_float_nullable_test() {
   |> to_decoder
   |> birdie.snap("decoder_type_elements_float_nullable")
 }
+
+pub fn decoder_type_values_float_test() {
+  RootSchema(
+    [],
+    json_typedef.Values(False, [], Type(False, [], json_typedef.Float32)),
+  )
+  |> to_decoder
+  |> birdie.snap("decoder_type_values_float")
+}
+
+pub fn decoder_type_values_float_nullable_test() {
+  RootSchema(
+    [],
+    json_typedef.Values(True, [], Type(False, [], json_typedef.Float32)),
+  )
+  |> to_decoder
+  |> birdie.snap("decoder_type_values_float_nullable")
+}
