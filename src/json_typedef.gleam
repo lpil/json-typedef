@@ -462,7 +462,8 @@ pub fn to_gleam_decoder_source_code(schema: RootSchema) -> String {
 fn de_schema(state: DeState, schema: Schema) -> De {
   case schema {
     Discriminator(_, _) -> todo
-    Elements(_, _, _) -> todo
+    Elements(schema:, nullable:, metadata: _) ->
+      de_elements(state, schema, nullable)
     Empty -> De("decode.dynamic", "Dynamic", state)
     Enum(_, _, _) -> todo
     Properties(_, _, _) -> todo
@@ -472,6 +473,13 @@ fn de_schema(state: DeState, schema: Schema) -> De {
   }
 }
 
+fn de_elements(state: DeState, schema: Schema, nullable: Bool) -> De {
+  let De(src:, type_name:, state:) = de_schema(state, schema)
+  let type_name = "List(" <> type_name <> ")"
+  let src = "decode.list(" <> src <> ")"
+  de_nullable(state, src, type_name, nullable)
+}
+
 fn de_type(state: DeState, t: Type, nullable: Bool) -> De {
   let #(src, type_name) = case t {
     Boolean -> #("decode.bool", "Bool")
@@ -479,6 +487,15 @@ fn de_type(state: DeState, t: Type, nullable: Bool) -> De {
     String | Timestamp -> #("decode.string", "String")
     Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> #("decode.int", "Int")
   }
+  de_nullable(state, src, type_name, nullable)
+}
+
+fn de_nullable(
+  state: DeState,
+  src: String,
+  type_name: String,
+  nullable: Bool,
+) -> De {
   case nullable {
     True -> {
       let type_name = "Option(" <> type_name <> ")"

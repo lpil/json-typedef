@@ -1,0 +1,24 @@
+---
+version: 1.2.1
+title: decoder_type_elements_float
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_elements_float_test
+---
+RootSchema(
+  [],
+  Elements(
+    False,
+    [],
+    Type(False, [], Float32),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dynamic.{type Dynamic}
+
+pub fn decode(data: Dynamic) -> Decoder(List(Float)) {
+  decode.list(decode.float)
+  |> decode.from(data)
+}
