@@ -266,6 +266,12 @@ fn to_decoder(schema: json_typedef.RootSchema) -> String {
   <> code
 }
 
+pub fn decoder_type_empty_test() {
+  RootSchema([], json_typedef.Empty)
+  |> to_decoder
+  |> birdie.snap("decoder_type_empty")
+}
+
 pub fn decoder_type_boolean_test() {
   RootSchema([], Type(False, [], json_typedef.Boolean))
   |> to_decoder
