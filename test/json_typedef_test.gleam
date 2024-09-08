@@ -403,3 +403,39 @@ pub fn decoder_type_nullable_uint32_test() {
   |> to_decoder
   |> birdie.snap("decoder_type_nullable_uint32")
 }
+
+pub fn decoder_type_elements_string_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(False, [], Type(False, [], json_typedef.String)),
+  )
+  |> to_decoder
+  |> birdie.snap("decoder_type_elements_string")
+}
+
+pub fn decoder_type_elements_string_nullable_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(True, [], Type(False, [], json_typedef.String)),
+  )
+  |> to_decoder
+  |> birdie.snap("decoder_type_elements_string_nullable")
+}
+
+pub fn decoder_type_elements_float_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(False, [], Type(False, [], json_typedef.Float32)),
+  )
+  |> to_decoder
+  |> birdie.snap("decoder_type_elements_float")
+}
+
+pub fn decoder_type_elements_float_nullable_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(True, [], Type(False, [], json_typedef.Float32)),
+  )
+  |> to_decoder
+  |> birdie.snap("decoder_type_elements_float_nullable")
+}

@@ -1,0 +1,25 @@
+---
+version: 1.2.1
+title: decoder_type_elements_string_nullable
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_elements_string_nullable_test
+---
+RootSchema(
+  [],
+  Elements(
+    True,
+    [],
+    Type(False, [], String),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dynamic.{type Dynamic}
+import gleam/option.{type Option}
+
+pub fn decode(data: Dynamic) -> Decoder(Option(List(String))) {
+  decode.nullable(decode.list(decode.string))
+  |> decode.from(data)
+}
