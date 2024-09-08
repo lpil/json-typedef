@@ -11,10 +11,10 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode.{type Decoder}
-import gleam/dynamic.{type Dynamic}
+import decode
+import gleam/dynamic
 
-pub fn decode(data: Dynamic) -> Decoder(String) {
+pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(String) {
   decode.string
   |> decode.from(data)
 }

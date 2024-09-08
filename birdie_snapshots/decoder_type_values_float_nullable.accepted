@@ -15,12 +15,12 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode.{type Decoder}
-import gleam/dict.{type Dict}
-import gleam/dynamic.{type Dynamic}
-import gleam/option.{type Option}
+import decode
+import gleam/dict
+import gleam/dynamic
+import gleam/option
 
-pub fn decode(data: Dynamic) -> Decoder(Option(Dict(String, Float))) {
+pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(dict.Dict(String, Float))) {
   decode.nullable(decode.dict(decode.string, decode.float))
   |> decode.from(data)
 }
