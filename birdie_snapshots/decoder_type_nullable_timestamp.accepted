@@ -1,0 +1,21 @@
+---
+version: 1.2.1
+title: decoder_type_nullable_timestamp
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_nullable_timestamp_test
+---
+RootSchema(
+  [],
+  Type(True, [], Timestamp),
+)
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dynamic.{type Dynamic}
+import gleam/option.{type Option}
+
+pub fn decode(data: Dynamic) -> Decoder(Option(String)) {
+  decode.nullable(decode.string)
+  |> decode.from(data)
+}

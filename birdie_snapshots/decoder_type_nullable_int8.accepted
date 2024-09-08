@@ -1,0 +1,18 @@
+---
+version: 1.2.1
+title: decoder_type_nullable_int8
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_nullable_int8_test
+---
+RootSchema([], Type(True, [], Int8))
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dynamic.{type Dynamic}
+import gleam/option.{type Option}
+
+pub fn decode(data: Dynamic) -> Decoder(Option(Int)) {
+  decode.nullable(decode.int)
+  |> decode.from(data)
+}
