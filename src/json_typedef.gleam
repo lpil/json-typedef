@@ -463,7 +463,7 @@ fn de_schema(state: DeState, schema: Schema) -> De {
   case schema {
     Discriminator(_, _) -> todo
     Elements(_, _, _) -> todo
-    Empty -> todo
+    Empty -> De("decode.dynamic", "Dynamic", state)
     Enum(_, _, _) -> todo
     Properties(_, _, _) -> todo
     Ref(_, _, _) -> todo
