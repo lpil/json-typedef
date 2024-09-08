@@ -29,15 +29,15 @@ pub type Type {
   /// Whole JSON numbers that fit in a signed 8-bit integer
   Int8
   /// Whole JSON numbers that fit in an unsigned 8-bit integer
-  UInt8
+  Uint8
   /// Whole JSON numbers that fit in a signed 16-bit integer
   Int16
   /// Whole JSON numbers that fit in an unsigned 16-bit integer
-  UInt16
+  Uint16
   /// Whole JSON numbers that fit in a signed 32-bit integer
   Int32
   /// Whole JSON numbers that fit in an unsigned 32-bit integer
-  UInt32
+  Uint32
 }
 
 pub type Schema {
@@ -172,9 +172,9 @@ fn type_to_json(t: Type) -> Json {
     Int8 -> "int8"
     String -> "string"
     Timestamp -> "timestamp"
-    UInt16 -> "uint16"
-    UInt32 -> "uint32"
-    UInt8 -> "uint8"
+    Uint16 -> "uint16"
+    Uint32 -> "uint32"
+    Uint8 -> "uint8"
   })
 }
 
@@ -306,9 +306,9 @@ fn decode_type(
     "int8" -> Ok(Type(nullable, metadata, Int8))
     "string" -> Ok(Type(nullable, metadata, String))
     "timestamp" -> Ok(Type(nullable, metadata, Timestamp))
-    "uint16" -> Ok(Type(nullable, metadata, UInt16))
-    "uint32" -> Ok(Type(nullable, metadata, UInt32))
-    "uint8" -> Ok(Type(nullable, metadata, UInt8))
+    "uint16" -> Ok(Type(nullable, metadata, Uint16))
+    "uint32" -> Ok(Type(nullable, metadata, Uint32))
+    "uint8" -> Ok(Type(nullable, metadata, Uint8))
     _ -> Error([dynamic.DecodeError("Type", "String", ["type"])])
   }
 }
@@ -432,5 +432,49 @@ fn add_nullable(
   case nullable {
     False -> data
     True -> [#("nullable", json.bool(True)), ..data]
+  }
+}
+
+type DeState {
+  DeState
+}
+
+type De {
+  De(code: String, type_name: String, state: DeState)
+}
+
+pub fn to_gleam_decoder_source_code(schema: RootSchema) -> String {
+  let src = de_root(DeState, schema)
+  "import decode.{type Decoder}\nimport gleam/dynamic.{type Dynamic}\n\n" <> src
+}
+
+fn de_root(state: DeState, schema: RootSchema) -> String {
+  let srcd = de_schema(state, schema.schema)
+  "pub fn decode(data: Dynamic) -> Decoder(" <> srcd.type_name <> ") {
+  " <> srcd.code <> "
+  |> decode.from(data)
+}\n"
+}
+
+fn de_schema(state: DeState, schema: Schema) -> De {
+  case schema {
+    Discriminator(_, _) -> todo
+    Elements(_, _, _) -> todo
+    Empty -> todo
+    Enum(_, _, _) -> todo
+    Properties(_, _, _) -> todo
+    Ref(_, _, _) -> todo
+    Type(type_:, nullable:, metadata: _) -> de_type(state, type_, nullable)
+    Values(_, _, _) -> todo
+  }
+}
+
+fn de_type(state: DeState, t: Type, nullable: Bool) -> De {
+  case t {
+    Boolean -> De("decode.bool", "Bool", state)
+    Float32 | Float64 -> De("decode.float", "Float", state)
+    String | Timestamp -> De("decode.string", "String", state)
+    Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 ->
+      De("decode.int", "Int", state)
   }
 }
