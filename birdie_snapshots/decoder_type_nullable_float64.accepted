@@ -16,3 +16,7 @@ pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(Float)) {
   decode.nullable(decode.float)
   |> decode.from(data)
 }
+
+pub fn to_json(data: option.Option(Float)) -> json.Json {
+  json.nullable(data, json.float)
+}

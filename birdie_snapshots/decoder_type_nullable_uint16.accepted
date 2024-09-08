@@ -16,3 +16,7 @@ pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(Int)) {
   decode.nullable(decode.int)
   |> decode.from(data)
 }
+
+pub fn to_json(data: option.Option(Int)) -> json.Json {
+  json.nullable(data, json.int)
+}

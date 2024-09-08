@@ -485,7 +485,14 @@ pub fn generate(
   schema: RootSchema,
 ) -> Result(String, CodegenError) {
   use gen <- result.try(gen_register(gen, "Data", schema.schema))
-  use gen <- result.map(gen_add_decoder(gen, option.None, schema.schema))
+  use gen <- result.try(case gen.generate_decoders {
+    True -> gen_add_decoder(gen, option.None, schema.schema)
+    False -> Ok(gen)
+  })
+  use gen <- result.map(case gen.generate_decoders {
+    True -> gen_add_encoder(gen, option.None, schema.schema)
+    False -> Ok(gen)
+  })
   gen_to_string(gen)
 }
 
@@ -559,6 +566,24 @@ fn gen_register_nullable(gen: Generator, nullable: Bool) -> Generator {
   }
 }
 
+fn gen_add_encoder(
+  gen: Generator,
+  name: Option(String),
+  schema: Schema,
+) -> Result(Generator, CodegenError) {
+  use out <- result.try(en_schema(gen, schema, option.Some("data")))
+  let gen = Generator(..gen, dynamic_used: True)
+  let src = "pub fn to_json(data: " <> out.type_name <> ") -> json.Json {
+  " <> out.src <> "
+}"
+
+  let name = case name {
+    option.Some(name) -> name <> "_to_json"
+    option.None -> "to_json"
+  }
+  gen_add_function(gen, name, src)
+}
+
 fn gen_add_decoder(
   gen: Generator,
   name: Option(String),
@@ -574,7 +599,7 @@ fn gen_add_decoder(
     <> out.src
     <> "
   |> decode.from(data)
-}\n"
+}"
 
   let name = case name {
     option.Some(name) -> name <> "_decoder"
@@ -651,9 +676,48 @@ fn gen_to_string(gen: Generator) -> String {
     }
   }
 
-  [block(imports), block(defs(gen.types)), block(defs(gen.functions))]
+  let helper__dict_to_json = case gen.generate_encoders && gen.dict_used {
+    False -> []
+    True -> [
+      "fn helper__dict_to_json(
+  data: dict.Dict(String, t),
+  to_json: fn(t) -> json.Json,
+) -> json.Json {
+  data
+  |> dict.to_list
+  |> list.map(fn(pair) { #(pair.0, to_json(pair.1)) })
+  |> json.object
+}",
+    ]
+  }
+
+  [
+    block(imports),
+    block(defs(gen.types)),
+    block(defs(gen.functions)),
+    helper__dict_to_json,
+  ]
   |> list.flatten
   |> string.join("\n\n")
+}
+
+fn en_schema(
+  gen: Generator,
+  schema: Schema,
+  data: Option(String),
+) -> Result(Out, CodegenError) {
+  case schema {
+    Discriminator(_, _) -> todo
+    Elements(schema:, nullable:, metadata: _) ->
+      en_elements(gen, schema, nullable, data)
+    Empty -> todo as "reject empty encode"
+    Enum(_, _, _) -> todo
+    Properties(nullable:, schema:, metadata: _) -> todo as "en properties"
+    Ref(_, _, _) -> todo
+    Type(type_:, nullable:, metadata: _) -> Ok(en_type(type_, nullable, data))
+    Values(schema:, nullable:, metadata: _) ->
+      en_values(gen, schema, nullable, data)
+  }
 }
 
 fn de_schema(gen: Generator, schema: Schema) -> Result(Out, CodegenError) {
@@ -693,6 +757,52 @@ fn de_properties_schema(
   todo
 }
 
+fn en_values(
+  gen: Generator,
+  schema: Schema,
+  nullable: Bool,
+  data: Option(String),
+) -> Result(Out, CodegenError) {
+  use Out(src:, type_name:) <- result.map(en_schema(gen, schema, option.None))
+  let type_name = "dict.Dict(String, " <> type_name <> ")"
+  let data = option.unwrap(data, "_")
+  case nullable {
+    False -> {
+      let src = "helper__dict_to_json(" <> data <> ", " <> src <> ")"
+      Out(src:, type_name:)
+    }
+    True -> {
+      let type_name = "option.Option(" <> type_name <> ")"
+      let src = "helper__dict_to_json(_, " <> src <> ")"
+      let src = "json.nullable(" <> data <> ", " <> src <> ")"
+      Out(src:, type_name:)
+    }
+  }
+}
+
+fn en_elements(
+  gen: Generator,
+  schema: Schema,
+  nullable: Bool,
+  data: Option(String),
+) -> Result(Out, CodegenError) {
+  use Out(src:, type_name:) <- result.map(en_schema(gen, schema, option.None))
+  let type_name = "List(" <> type_name <> ")"
+  let data = option.unwrap(data, "_")
+  case nullable {
+    False -> {
+      let src = "json.array(" <> data <> ", " <> src <> ")"
+      Out(src:, type_name:)
+    }
+    True -> {
+      let type_name = "option.Option(" <> type_name <> ")"
+      let src = "json.array(_, " <> src <> ")"
+      let src = "json.nullable(" <> data <> ", " <> src <> ")"
+      Out(src:, type_name:)
+    }
+  }
+}
+
 fn de_values(
   gen: Generator,
   schema: Schema,
@@ -723,6 +833,41 @@ fn de_type(t: Type, nullable: Bool) -> Out {
     Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> #("decode.int", "Int")
   }
   de_nullable(src, type_name, nullable)
+}
+
+fn en_type(t: Type, nullable: Bool, data: Option(String)) -> Out {
+  let #(src, type_name) = case t {
+    Boolean -> #("json.bool", "Bool")
+    Float32 | Float64 -> #("json.float", "Float")
+    String | Timestamp -> #("json.string", "String")
+    Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> #("json.int", "Int")
+  }
+  en_nullable(src, type_name, nullable, data)
+}
+
+fn en_nullable(
+  src: String,
+  type_name: String,
+  nullable: Bool,
+  data: Option(String),
+) -> Out {
+  case nullable {
+    True -> {
+      let type_name = "option.Option(" <> type_name <> ")"
+      let src = case data {
+        option.Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
+        option.None -> "json.nullable(_, " <> src <> ")"
+      }
+      Out(src:, type_name:)
+    }
+    False -> {
+      let src = case data {
+        option.Some(data) -> src <> "(" <> data <> ")"
+        option.None -> src
+      }
+      Out(src:, type_name:)
+    }
+  }
 }
 
 fn de_nullable(src: String, type_name: String, nullable: Bool) -> Out {

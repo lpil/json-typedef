@@ -18,3 +18,7 @@ pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(String) {
   decode.string
   |> decode.from(data)
 }
+
+pub fn to_json(data: String) -> json.Json {
+  json.string(data)
+}
