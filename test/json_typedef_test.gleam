@@ -260,7 +260,15 @@ pub fn to_json_type_metadata_test() {
 }
 
 fn to_decoder(schema: json_typedef.RootSchema) -> String {
-  let code = json_typedef.to_gleam_decoder_source_code(schema)
+  let result =
+    json_typedef.codegen()
+    |> json_typedef.generate_decoders(True)
+    |> json_typedef.generate_encoders(True)
+    |> json_typedef.generate(schema)
+  let code = case result {
+    Ok(code) -> code
+    Error(e) -> pprint.format(e)
+  }
   pprint.format(schema)
   <> "\n\n-----------------------------------------------------------\n\n"
   <> code
