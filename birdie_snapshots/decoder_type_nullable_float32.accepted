@@ -8,11 +8,11 @@ RootSchema([], Type(True, [], Float32))
 
 -----------------------------------------------------------
 
-import decode.{type Decoder}
-import gleam/dynamic.{type Dynamic}
-import gleam/option.{type Option}
+import decode
+import gleam/dynamic
+import gleam/option
 
-pub fn decode(data: Dynamic) -> Decoder(Option(Float)) {
+pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(Float)) {
   decode.nullable(decode.float)
   |> decode.from(data)
 }

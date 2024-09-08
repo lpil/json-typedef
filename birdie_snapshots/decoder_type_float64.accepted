@@ -8,10 +8,10 @@ RootSchema([], Type(False, [], Float64))
 
 -----------------------------------------------------------
 
-import decode.{type Decoder}
-import gleam/dynamic.{type Dynamic}
+import decode
+import gleam/dynamic
 
-pub fn decode(data: Dynamic) -> Decoder(Float) {
+pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(Float) {
   decode.float
   |> decode.from(data)
 }
