@@ -258,3 +258,76 @@ pub fn to_json_type_metadata_test() {
   |> json.to_string
   |> birdie.snap("to_json_type_metadata_test")
 }
+
+fn to_decoder(schema: json_typedef.RootSchema) -> String {
+  let code = json_typedef.to_gleam_decoder_source_code(schema)
+  pprint.format(schema)
+  <> "\n\n-----------------------------------------------------------\n\n"
+  <> code
+}
+
+pub fn decoder_type_boolean_test() {
+  RootSchema([], Type(False, [], json_typedef.Boolean))
+  |> to_decoder
+  |> birdie.snap("decoder_type_boolean")
+}
+
+pub fn decoder_type_string_test() {
+  RootSchema([], Type(False, [], json_typedef.String))
+  |> to_decoder
+  |> birdie.snap("decoder_type_string")
+}
+
+pub fn decoder_type_timestamp_test() {
+  RootSchema([], Type(False, [], json_typedef.Timestamp))
+  |> to_decoder
+  |> birdie.snap("decoder_type_timestamp")
+}
+
+pub fn decoder_type_float32_test() {
+  RootSchema([], Type(False, [], json_typedef.Float32))
+  |> to_decoder
+  |> birdie.snap("decoder_type_float32")
+}
+
+pub fn decoder_type_float64_test() {
+  RootSchema([], Type(False, [], json_typedef.Float64))
+  |> to_decoder
+  |> birdie.snap("decoder_type_float64")
+}
+
+pub fn decoder_type_int8_test() {
+  RootSchema([], Type(False, [], json_typedef.Int8))
+  |> to_decoder
+  |> birdie.snap("decoder_type_int8")
+}
+
+pub fn decoder_type_uint8_test() {
+  RootSchema([], Type(False, [], json_typedef.Uint8))
+  |> to_decoder
+  |> birdie.snap("decoder_type_uint8")
+}
+
+pub fn decoder_type_int16_test() {
+  RootSchema([], Type(False, [], json_typedef.Int16))
+  |> to_decoder
+  |> birdie.snap("decoder_type_int16")
+}
+
+pub fn decoder_type_uint16_test() {
+  RootSchema([], Type(False, [], json_typedef.Uint16))
+  |> to_decoder
+  |> birdie.snap("decoder_type_uint16")
+}
+
+pub fn decoder_type_int32_test() {
+  RootSchema([], Type(False, [], json_typedef.Int32))
+  |> to_decoder
+  |> birdie.snap("decoder_type_int32")
+}
+
+pub fn decoder_type_uint32_test() {
+  RootSchema([], Type(False, [], json_typedef.Uint32))
+  |> to_decoder
+  |> birdie.snap("decoder_type_uint32")
+}

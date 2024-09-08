@@ -1,0 +1,17 @@
+---
+version: 1.2.1
+title: decoder_type_string
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_string_test
+---
+RootSchema([], Type(False, [], String))
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dynamic.{type Dynamic}
+
+pub fn decode(data: Dynamic) -> Decoder(String) {
+  decode.string
+  |> decode.from(data)
+}

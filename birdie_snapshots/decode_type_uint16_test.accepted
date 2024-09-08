@@ -8,5 +8,5 @@ test_name: decode_type_uint16_test
 
 Ok(RootSchema(
   [],
-  Type(False, [], UInt16),
+  Type(False, [], Uint16),
 ))

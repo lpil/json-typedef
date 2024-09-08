@@ -1,0 +1,17 @@
+---
+version: 1.2.1
+title: decoder_type_uint8
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_uint8_test
+---
+RootSchema([], Type(False, [], Uint8))
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dynamic.{type Dynamic}
+
+pub fn decode(data: Dynamic) -> Decoder(Int) {
+  decode.int
+  |> decode.from(data)
+}
