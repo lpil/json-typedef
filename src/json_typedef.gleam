@@ -2,8 +2,6 @@
 ////
 //// <https://datatracker.ietf.org/doc/html/rfc8927>
 
-// TODO: nullable
-// TODO: metadata
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/json.{type Json}
@@ -435,24 +433,52 @@ fn add_nullable(
   }
 }
 
-type DeState {
-  DeState(option_used: Bool, dict_used: Bool)
+pub opaque type Generator {
+  Generator(
+    generate_decoders: Bool,
+    generate_encoders: Bool,
+    option_used: Bool,
+    dict_used: Bool,
+  )
+}
+
+pub fn codegen() -> Generator {
+  Generator(
+    option_used: False,
+    dict_used: False,
+    generate_decoders: False,
+    generate_encoders: False,
+  )
+}
+
+pub fn generate_encoders(gen: Generator, x: Bool) -> Generator {
+  Generator(..gen, generate_encoders: x)
+}
+
+pub fn generate_decoders(gen: Generator, x: Bool) -> Generator {
+  Generator(..gen, generate_decoders: x)
 }
 
 type De {
-  De(src: String, type_name: String, state: DeState)
+  De(src: String, type_name: String, gen: Generator)
 }
 
-pub fn to_gleam_decoder_source_code(schema: RootSchema) -> String {
-  let de =
-    de_schema(DeState(option_used: False, dict_used: False), schema.schema)
+pub type CodegenError {
+  CodegenError
+}
+
+pub fn generate(
+  gen: Generator,
+  schema: RootSchema,
+) -> Result(String, CodegenError) {
+  use de <- result.map(de_schema(gen, schema.schema, "data"))
   let src = "import decode.{type Decoder}\n"
-  let src = case de.state.dict_used {
+  let src = case de.gen.dict_used {
     False -> src
     True -> src <> "import gleam/dict.{type Dict}\n"
   }
   let src = src <> "import gleam/dynamic.{type Dynamic}\n"
-  let src = case de.state.option_used {
+  let src = case de.gen.option_used {
     False -> src
     True -> src <> "import gleam/option.{type Option}\n"
   }
@@ -464,48 +490,87 @@ pub fn to_gleam_decoder_source_code(schema: RootSchema) -> String {
 }\n"
 }
 
-fn de_schema(state: DeState, schema: Schema) -> De {
+fn de_schema(
+  gen: Generator,
+  schema: Schema,
+  name: String,
+) -> Result(De, CodegenError) {
   case schema {
     Discriminator(_, _) -> todo
     Elements(schema:, nullable:, metadata: _) ->
-      de_elements(state, schema, nullable)
-    Empty -> De("decode.dynamic", "Dynamic", state)
+      de_elements(gen, schema, nullable, name)
+    Empty -> Ok(De("decode.dynamic", "Dynamic", gen))
     Enum(_, _, _) -> todo
-    Properties(_, _, _) -> todo
+    Properties(nullable:, schema:, metadata: _) ->
+      de_properties(gen, schema, nullable, name)
     Ref(_, _, _) -> todo
-    Type(type_:, nullable:, metadata: _) -> de_type(state, type_, nullable)
+    Type(type_:, nullable:, metadata: _) -> Ok(de_type(gen, type_, nullable))
     Values(schema:, nullable:, metadata: _) ->
-      de_values(state, schema, nullable)
+      de_values(gen, schema, nullable, name)
   }
 }
 
-fn de_values(state: DeState, schema: Schema, nullable: Bool) -> De {
-  let De(src:, type_name:, state:) = de_schema(state, schema)
+fn de_properties(
+  gen: Generator,
+  schema: PropertiesSchema,
+  nullable: Bool,
+  name: String,
+) -> Result(De, CodegenError) {
+  let result = de_properties_schema(gen, schema, name)
+  use De(src:, type_name:, gen:) <- result.map(result)
+  de_nullable(gen, src, type_name, nullable)
+}
+
+fn de_properties_schema(
+  gen: Generator,
+  schema: PropertiesSchema,
+  name: String,
+) -> Result(De, CodegenError) {
+  let PropertiesSchema(
+    properties:,
+    optional_properties:,
+    additional_properties: _,
+  ) = schema
+  todo
+}
+
+fn de_values(
+  gen: Generator,
+  schema: Schema,
+  nullable: Bool,
+  name: String,
+) -> Result(De, CodegenError) {
+  use De(src:, type_name:, gen:) <- result.map(de_schema(gen, schema, name))
   let type_name = "Dict(String, " <> type_name <> ")"
   let src = "decode.dict(decode.string, " <> src <> ")"
-  let state = DeState(..state, dict_used: True)
-  de_nullable(state, src, type_name, nullable)
+  let gen = Generator(..gen, dict_used: True)
+  de_nullable(gen, src, type_name, nullable)
 }
 
-fn de_elements(state: DeState, schema: Schema, nullable: Bool) -> De {
-  let De(src:, type_name:, state:) = de_schema(state, schema)
+fn de_elements(
+  gen: Generator,
+  schema: Schema,
+  nullable: Bool,
+  name: String,
+) -> Result(De, CodegenError) {
+  use De(src:, type_name:, gen:) <- result.map(de_schema(gen, schema, name))
   let type_name = "List(" <> type_name <> ")"
   let src = "decode.list(" <> src <> ")"
-  de_nullable(state, src, type_name, nullable)
+  de_nullable(gen, src, type_name, nullable)
 }
 
-fn de_type(state: DeState, t: Type, nullable: Bool) -> De {
+fn de_type(gen: Generator, t: Type, nullable: Bool) -> De {
   let #(src, type_name) = case t {
     Boolean -> #("decode.bool", "Bool")
     Float32 | Float64 -> #("decode.float", "Float")
     String | Timestamp -> #("decode.string", "String")
     Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> #("decode.int", "Int")
   }
-  de_nullable(state, src, type_name, nullable)
+  de_nullable(gen, src, type_name, nullable)
 }
 
 fn de_nullable(
-  state: DeState,
+  gen: Generator,
   src: String,
   type_name: String,
   nullable: Bool,
@@ -514,9 +579,9 @@ fn de_nullable(
     True -> {
       let type_name = "Option(" <> type_name <> ")"
       let src = "decode.nullable(" <> src <> ")"
-      let state = DeState(..state, option_used: True)
-      De(src:, type_name:, state:)
+      let gen = Generator(..gen, option_used: True)
+      De(src:, type_name:, gen:)
     }
-    False -> De(src:, type_name:, state:)
+    False -> De(src:, type_name:, gen:)
   }
 }
