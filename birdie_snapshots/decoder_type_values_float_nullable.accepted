@@ -1,0 +1,26 @@
+---
+version: 1.2.1
+title: decoder_type_values_float_nullable
+file: ./test/json_typedef_test.gleam
+test_name: decoder_type_values_float_nullable_test
+---
+RootSchema(
+  [],
+  Values(
+    True,
+    [],
+    Type(False, [], Float32),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode.{type Decoder}
+import gleam/dict.{type Dict}
+import gleam/dynamic.{type Dynamic}
+import gleam/option.{type Option}
+
+pub fn decode(data: Dynamic) -> Decoder(Option(Dict(String, Float))) {
+  decode.nullable(decode.dict(decode.string, decode.float))
+  |> decode.from(data)
+}

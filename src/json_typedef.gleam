@@ -436,7 +436,7 @@ fn add_nullable(
 }
 
 type DeState {
-  DeState(option_used: Bool)
+  DeState(option_used: Bool, dict_used: Bool)
 }
 
 type De {
@@ -444,8 +444,13 @@ type De {
 }
 
 pub fn to_gleam_decoder_source_code(schema: RootSchema) -> String {
-  let de = de_schema(DeState(option_used: False), schema.schema)
+  let de =
+    de_schema(DeState(option_used: False, dict_used: False), schema.schema)
   let src = "import decode.{type Decoder}\n"
+  let src = case de.state.dict_used {
+    False -> src
+    True -> src <> "import gleam/dict.{type Dict}\n"
+  }
   let src = src <> "import gleam/dynamic.{type Dynamic}\n"
   let src = case de.state.option_used {
     False -> src
@@ -469,8 +474,17 @@ fn de_schema(state: DeState, schema: Schema) -> De {
     Properties(_, _, _) -> todo
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> de_type(state, type_, nullable)
-    Values(_, _, _) -> todo
+    Values(schema:, nullable:, metadata: _) ->
+      de_values(state, schema, nullable)
   }
+}
+
+fn de_values(state: DeState, schema: Schema, nullable: Bool) -> De {
+  let De(src:, type_name:, state:) = de_schema(state, schema)
+  let type_name = "Dict(String, " <> type_name <> ")"
+  let src = "decode.dict(decode.string, " <> src <> ")"
+  let state = DeState(..state, dict_used: True)
+  de_nullable(state, src, type_name, nullable)
 }
 
 fn de_elements(state: DeState, schema: Schema, nullable: Bool) -> De {
@@ -500,7 +514,7 @@ fn de_nullable(
     True -> {
       let type_name = "Option(" <> type_name <> ")"
       let src = "decode.nullable(" <> src <> ")"
-      let state = DeState(option_used: True)
+      let state = DeState(..state, option_used: True)
       De(src:, type_name:, state:)
     }
     False -> De(src:, type_name:, state:)
