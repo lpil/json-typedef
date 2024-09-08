@@ -23,3 +23,17 @@ pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(dict.Dict(String, Float))
   decode.dict(decode.string, decode.float)
   |> decode.from(data)
 }
+
+pub fn to_json(data: dict.Dict(String, Float)) -> json.Json {
+  helper__dict_to_json(data, json.float)
+}
+
+fn helper__dict_to_json(
+  data: dict.Dict(String, t),
+  to_json: fn(t) -> json.Json,
+) -> json.Json {
+  data
+  |> dict.to_list
+  |> list.map(fn(pair) { #(pair.0, to_json(pair.1)) })
+  |> json.object
+}
