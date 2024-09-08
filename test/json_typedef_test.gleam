@@ -331,3 +331,69 @@ pub fn decoder_type_uint32_test() {
   |> to_decoder
   |> birdie.snap("decoder_type_uint32")
 }
+
+pub fn decoder_type_nullable_boolean_test() {
+  RootSchema([], Type(True, [], json_typedef.Boolean))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_boolean")
+}
+
+pub fn decoder_type_nullable_string_test() {
+  RootSchema([], Type(True, [], json_typedef.String))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_string")
+}
+
+pub fn decoder_type_nullable_timestamp_test() {
+  RootSchema([], Type(True, [], json_typedef.Timestamp))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_timestamp")
+}
+
+pub fn decoder_type_nullable_float32_test() {
+  RootSchema([], Type(True, [], json_typedef.Float32))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_float32")
+}
+
+pub fn decoder_type_nullable_float64_test() {
+  RootSchema([], Type(True, [], json_typedef.Float64))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_float64")
+}
+
+pub fn decoder_type_nullable_int8_test() {
+  RootSchema([], Type(True, [], json_typedef.Int8))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_int8")
+}
+
+pub fn decoder_type_nullable_uint8_test() {
+  RootSchema([], Type(True, [], json_typedef.Uint8))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_uint8")
+}
+
+pub fn decoder_type_nullable_int16_test() {
+  RootSchema([], Type(True, [], json_typedef.Int16))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_int16")
+}
+
+pub fn decoder_type_nullable_uint16_test() {
+  RootSchema([], Type(True, [], json_typedef.Uint16))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_uint16")
+}
+
+pub fn decoder_type_nullable_int32_test() {
+  RootSchema([], Type(True, [], json_typedef.Int32))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_int32")
+}
+
+pub fn decoder_type_nullable_uint32_test() {
+  RootSchema([], Type(True, [], json_typedef.Uint32))
+  |> to_decoder
+  |> birdie.snap("decoder_type_nullable_uint32")
+}

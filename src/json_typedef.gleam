@@ -436,22 +436,25 @@ fn add_nullable(
 }
 
 type DeState {
-  DeState
+  DeState(option_used: Bool)
 }
 
 type De {
-  De(code: String, type_name: String, state: DeState)
+  De(src: String, type_name: String, state: DeState)
 }
 
 pub fn to_gleam_decoder_source_code(schema: RootSchema) -> String {
-  let src = de_root(DeState, schema)
-  "import decode.{type Decoder}\nimport gleam/dynamic.{type Dynamic}\n\n" <> src
-}
+  let de = de_schema(DeState(option_used: False), schema.schema)
+  let src = "import decode.{type Decoder}\n"
+  let src = src <> "import gleam/dynamic.{type Dynamic}\n"
+  let src = case de.state.option_used {
+    False -> src
+    True -> src <> "import gleam/option.{type Option}\n"
+  }
+  let src = src <> "\n"
 
-fn de_root(state: DeState, schema: RootSchema) -> String {
-  let srcd = de_schema(state, schema.schema)
-  "pub fn decode(data: Dynamic) -> Decoder(" <> srcd.type_name <> ") {
-  " <> srcd.code <> "
+  src <> "pub fn decode(data: Dynamic) -> Decoder(" <> de.type_name <> ") {
+  " <> de.src <> "
   |> decode.from(data)
 }\n"
 }
@@ -470,11 +473,19 @@ fn de_schema(state: DeState, schema: Schema) -> De {
 }
 
 fn de_type(state: DeState, t: Type, nullable: Bool) -> De {
-  case t {
-    Boolean -> De("decode.bool", "Bool", state)
-    Float32 | Float64 -> De("decode.float", "Float", state)
-    String | Timestamp -> De("decode.string", "String", state)
-    Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 ->
-      De("decode.int", "Int", state)
+  let #(src, type_name) = case t {
+    Boolean -> #("decode.bool", "Bool")
+    Float32 | Float64 -> #("decode.float", "Float")
+    String | Timestamp -> #("decode.string", "String")
+    Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> #("decode.int", "Int")
+  }
+  case nullable {
+    True -> {
+      let type_name = "Option(" <> type_name <> ")"
+      let src = "decode.nullable(" <> src <> ")"
+      let state = DeState(option_used: True)
+      De(src:, type_name:, state:)
+    }
+    False -> De(src:, type_name:, state:)
   }
 }
