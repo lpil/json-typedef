@@ -173,6 +173,34 @@ pub fn decode_discriminator_event_type_test() {
   |> birdie.snap("decode_discriminator_event_type_test")
 }
 
+pub fn decode_discriminator_event_type_metadata_test() {
+  "{
+    \"discriminator\": \"eventType\",
+    \"metadata\": { \"name\": \"wibble\" },
+    \"mapping\": {
+        \"USER_CREATED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" }
+            }
+        },
+        \"USER_PAYMENT_PLAN_CHANGED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" },
+                \"plan\": { \"enum\": [\"FREE\", \"PAID\"]}
+            }
+        },
+        \"USER_DELETED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" },
+                \"softDelete\": { \"type\": \"boolean\" }
+            }
+        }
+    }
+}"
+  |> test_decode
+  |> birdie.snap("decode_discriminator_event_type_metadata_test")
+}
+
 pub fn decode_discriminator_event_type_nullable_test() {
   "{
     \"discriminator\": \"eventType\",
@@ -253,7 +281,7 @@ pub fn decode_type_nullable_false_test() {
 pub fn to_json_discriminator_test() {
   RootSchema(
     [],
-    json_typedef.Discriminator(False, "kind", [
+    json_typedef.Discriminator(False, [], "kind", [
       #(
         "up",
         json_typedef.PropertiesSchema(
@@ -280,7 +308,7 @@ pub fn to_json_discriminator_test() {
 pub fn to_json_discriminator_nullable_test() {
   RootSchema(
     [],
-    json_typedef.Discriminator(True, "kind", [
+    json_typedef.Discriminator(True, [], "kind", [
       #(
         "up",
         json_typedef.PropertiesSchema(
