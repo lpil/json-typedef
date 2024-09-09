@@ -16,12 +16,10 @@ RootSchema(
 -----------------------------------------------------------
 
 import decode
-import gleam/dynamic
 import gleam/option
 
-pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(List(String))) {
+pub fn decode() -> decode.Decoder(option.Option(List(String))) {
   decode.nullable(decode.list(decode.string))
-  |> decode.from(data)
 }
 
 pub fn to_json(data: option.Option(List(String))) -> json.Json {

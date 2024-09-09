@@ -9,12 +9,10 @@ RootSchema([], Type(True, [], Boolean))
 -----------------------------------------------------------
 
 import decode
-import gleam/dynamic
 import gleam/option
 
-pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(Bool)) {
+pub fn decode() -> decode.Decoder(option.Option(Bool)) {
   decode.nullable(decode.bool)
-  |> decode.from(data)
 }
 
 pub fn to_json(data: option.Option(Bool)) -> json.Json {

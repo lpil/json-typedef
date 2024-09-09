@@ -16,11 +16,9 @@ RootSchema(
 -----------------------------------------------------------
 
 import decode
-import gleam/dynamic
 
-pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(List(Float)) {
+pub fn decode() -> decode.Decoder(List(Float)) {
   decode.list(decode.float)
-  |> decode.from(data)
 }
 
 pub fn to_json(data: List(Float)) -> json.Json {

@@ -11,7 +11,6 @@ RootSchema([], Empty)
 import decode
 import gleam/dynamic
 
-pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(dynamic.Dynamic) {
+pub fn decode() -> decode.Decoder(dynamic.Dynamic) {
   decode.dynamic
-  |> decode.from(data)
 }

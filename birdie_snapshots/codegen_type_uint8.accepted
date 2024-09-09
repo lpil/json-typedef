@@ -9,11 +9,9 @@ RootSchema([], Type(False, [], Uint8))
 -----------------------------------------------------------
 
 import decode
-import gleam/dynamic
 
-pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(Int) {
+pub fn decode() -> decode.Decoder(Int) {
   decode.int
-  |> decode.from(data)
 }
 
 pub fn to_json(data: Int) -> json.Json {
