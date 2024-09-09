@@ -4,8 +4,9 @@
 
 //
 //
-// TODO: decoder annotation is wrong
-// TODO: discriminator should be able to be nullable!
+//
+// TODO: check if metadata can be on discriminator. It isn't atm
+//
 //
 //
 
@@ -74,7 +75,11 @@ pub type Schema {
   /// like a Java `Map<String, T>` or TypeScript `{ [key: string]: T}`.
   Values(nullable: Bool, metadata: List(#(String, Dynamic)), schema: Schema)
   /// The discriminator form is like a tagged union.
-  Discriminator(tag: String, mapping: List(#(String, PropertiesSchema)))
+  Discriminator(
+    nullable: Bool,
+    tag: String,
+    mapping: List(#(String, PropertiesSchema)),
+  )
   /// The ref form is for re-using schemas, usually so you can avoid repeating
   /// yourself.
   Ref(nullable: Bool, metadata: List(#(String, Dynamic)), name: String)
@@ -166,7 +171,9 @@ fn schema_to_json(schema: Schema) -> List(#(String, Json)) {
       properties_schema_to_json(schema)
       |> add_nullable(nullable)
       |> add_metadata(metadata)
-    Discriminator(tag:, mapping:) -> discriminator_to_json(tag, mapping)
+    Discriminator(nullable:, tag:, mapping:) ->
+      discriminator_to_json(tag, mapping)
+      |> add_nullable(nullable)
   }
 }
 
@@ -203,8 +210,6 @@ pub fn decoder(data: Dynamic) -> Result(RootSchema, List(dynamic.DecodeError)) {
 
 fn decode_schema(data: Dynamic) -> Result(Schema, List(dynamic.DecodeError)) {
   use data <- result.try(dynamic.dict(dynamic.string, dynamic.dynamic)(data))
-  // TODO: metadata
-  // TODO: nullable
   let decoder =
     key_decoder(data, "type", decode_type)
     |> result.lazy_or(fn() { key_decoder(data, "enum", decode_enum) })
@@ -244,6 +249,7 @@ fn decode_discriminator(
   tag: Dynamic,
   data: Dict(String, Dynamic),
 ) -> Result(Schema, List(dynamic.DecodeError)) {
+  use nullable <- result.try(get_nullable(data))
   use tag <- result.try(dynamic.string(tag) |> push_path("discriminator"))
   use mapping <- result.try(case dict.get(data, "mapping") {
     Ok(mapping) -> Ok(mapping)
@@ -253,7 +259,7 @@ fn decode_discriminator(
     decode_object_as_list(mapping, decode_properties_schema)
     |> push_path("mapping"),
   )
-  Ok(Discriminator(tag:, mapping: properties))
+  Ok(Discriminator(nullable:, tag:, mapping: properties))
 }
 
 fn decode_object_as_list(
@@ -532,7 +538,8 @@ fn gen_register(
       gen_register(gen, name <> "Value", schema)
     }
 
-    Discriminator(tag: _, mapping:) -> {
+    Discriminator(nullable:, tag: _, mapping:) -> {
+      let gen = gen_register_nullable(gen, nullable)
       list.try_fold(mapping, gen, fn(gen, mapping) {
         gen_register_properties(gen, name <> mapping.0, mapping.1)
       })
@@ -710,7 +717,7 @@ fn en_schema(
   position_name: String,
 ) -> Result(Out, CodegenError) {
   case schema {
-    Discriminator(_, _) -> todo
+    Discriminator(_, _, _) -> todo
     Elements(schema:, nullable:, metadata: _) ->
       en_elements(schema, nullable, data, position_name)
     Empty -> Error(CannotConvertEmptyToJsonError)
@@ -726,7 +733,7 @@ fn en_schema(
 
 fn de_schema(schema: Schema, position_name: String) -> Result(Out, CodegenError) {
   case schema {
-    Discriminator(_, _) -> todo
+    Discriminator(_, _, _) -> todo
     Elements(schema:, nullable:, metadata: _) ->
       de_elements(schema, nullable, position_name)
     Empty -> Ok(Out("decode.dynamic", "dynamic.Dynamic"))
