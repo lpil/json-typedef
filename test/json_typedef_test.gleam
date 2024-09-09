@@ -173,6 +173,34 @@ pub fn decode_discriminator_event_type_test() {
   |> birdie.snap("decode_discriminator_event_type_test")
 }
 
+pub fn decode_discriminator_event_type_nullable_test() {
+  "{
+    \"discriminator\": \"eventType\",
+    \"nullable\": true,
+    \"mapping\": {
+        \"USER_CREATED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" }
+            }
+        },
+        \"USER_PAYMENT_PLAN_CHANGED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" },
+                \"plan\": { \"enum\": [\"FREE\", \"PAID\"]}
+            }
+        },
+        \"USER_DELETED\": {
+            \"properties\": {
+                \"id\": { \"type\": \"string\" },
+                \"softDelete\": { \"type\": \"boolean\" }
+            }
+        }
+    }
+}"
+  |> test_decode
+  |> birdie.snap("decode_discriminator_event_type_nullable_test")
+}
+
 pub fn decode_properties_test() {
   "{
     \"properties\": {
@@ -220,6 +248,60 @@ pub fn decode_type_nullable_false_test() {
   "{ \"type\": \"boolean\", \"nullable\": false }"
   |> test_decode
   |> birdie.snap("decode_type_nullable_false_test")
+}
+
+pub fn to_json_discriminator_test() {
+  RootSchema(
+    [],
+    json_typedef.Discriminator(False, "kind", [
+      #(
+        "up",
+        json_typedef.PropertiesSchema(
+          [#("amount", json_typedef.Type(False, [], json_typedef.Uint8))],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "down",
+        json_typedef.PropertiesSchema(
+          [#("amount", json_typedef.Type(False, [], json_typedef.Float32))],
+          [],
+          False,
+        ),
+      ),
+    ]),
+  )
+  |> json_typedef.to_json
+  |> json.to_string
+  |> birdie.snap("to_json_discriminator_test")
+}
+
+pub fn to_json_discriminator_nullable_test() {
+  RootSchema(
+    [],
+    json_typedef.Discriminator(True, "kind", [
+      #(
+        "up",
+        json_typedef.PropertiesSchema(
+          [#("amount", json_typedef.Type(False, [], json_typedef.Uint8))],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "down",
+        json_typedef.PropertiesSchema(
+          [#("amount", json_typedef.Type(False, [], json_typedef.Float32))],
+          [],
+          False,
+        ),
+      ),
+    ]),
+  )
+  |> json_typedef.to_json
+  |> json.to_string
+  |> birdie.snap("to_json_discriminator_nullable_test")
 }
 
 pub fn to_json_type_nullable_test() {

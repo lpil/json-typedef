@@ -1,0 +1,7 @@
+---
+version: 1.2.1
+title: to_json_discriminator_test
+file: ./test/json_typedef_test.gleam
+test_name: to_json_discriminator_test
+---
+{"discriminator":"kind","mapping":{"up":{"properties":{"amount":{"type":"uint8"}}},"down":{"properties":{"amount":{"type":"float32"}}}}}
