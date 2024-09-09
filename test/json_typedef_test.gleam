@@ -485,3 +485,41 @@ pub fn codegen_type_values_float_nullable_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_type_values_float_nullable")
 }
+
+pub fn codegen_enum_empty_test() {
+  RootSchema([], json_typedef.Enum(False, [], []))
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_enum_empty_test")
+}
+
+pub fn codegen_enum_directions_test() {
+  RootSchema([], json_typedef.Enum(False, [], ["UP", "DOWN", "LEFT", "RIGHT"]))
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_enum_directions_test")
+}
+
+pub fn codegen_element_enum_directions_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(
+      False,
+      [],
+      json_typedef.Enum(False, [], ["UP", "DOWN", "LEFT", "RIGHT"]),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_element_enum_directions_test")
+}
+
+pub fn codegen_element_enum_directions_nullable_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(
+      False,
+      [],
+      json_typedef.Enum(True, [], ["UP", "DOWN", "LEFT", "RIGHT"]),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_element_enum_directions_nullable_test")
+}

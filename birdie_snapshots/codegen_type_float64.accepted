@@ -9,6 +9,7 @@ RootSchema([], Type(False, [], Float64))
 -----------------------------------------------------------
 
 import decode
+import gleam/json
 
 pub fn decode() -> decode.Decoder(Float) {
   decode.float

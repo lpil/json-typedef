@@ -12,6 +12,7 @@ RootSchema(
 -----------------------------------------------------------
 
 import decode
+import gleam/json
 import gleam/option
 
 pub fn decode() -> decode.Decoder(option.Option(String)) {

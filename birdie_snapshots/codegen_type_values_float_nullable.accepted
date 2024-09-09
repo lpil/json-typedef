@@ -17,6 +17,7 @@ RootSchema(
 
 import decode
 import gleam/dict
+import gleam/json
 import gleam/option
 
 pub fn decode() -> decode.Decoder(option.Option(dict.Dict(String, Float))) {
