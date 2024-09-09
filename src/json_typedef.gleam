@@ -9,6 +9,7 @@
 //
 //
 
+import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/json.{type Json}
@@ -16,6 +17,7 @@ import gleam/list
 import gleam/option.{type Option}
 import gleam/result
 import gleam/string
+import justin
 
 pub type RootSchema {
   RootSchema(definitions: List(#(String, Schema)), schema: Schema)
@@ -479,19 +481,21 @@ type Out {
 
 pub type CodegenError {
   CannotConvertEmptyToJsonError
+  EmptyEnumError
 }
 
 pub fn generate(
   gen: Generator,
   schema: RootSchema,
 ) -> Result(String, CodegenError) {
-  use gen <- result.try(gen_register(gen, "Data", schema.schema))
+  let position = "Data"
+  use gen <- result.try(gen_register(gen, position, schema.schema))
   use gen <- result.try(case gen.generate_decoders {
-    True -> gen_add_decoder(gen, option.None, schema.schema)
+    True -> gen_add_decoder(gen, option.None, schema.schema, position)
     False -> Ok(gen)
   })
   use gen <- result.map(case gen.generate_encoders {
-    True -> gen_add_encoder(gen, option.None, schema.schema)
+    True -> gen_add_encoder(gen, option.None, schema.schema, position)
     False -> Ok(gen)
   })
   gen_to_string(gen)
@@ -506,7 +510,11 @@ fn gen_register(
     Empty -> Ok(Generator(..gen, dynamic_used: True))
     Ref(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
     Type(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
-    Enum(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
+
+    Enum(nullable:, variants:, ..) -> {
+      let gen = gen_register_nullable(gen, nullable)
+      gen_enum_type(gen, name, variants)
+    }
 
     Properties(schema:, nullable:, ..) -> {
       let gen = gen_register_nullable(gen, nullable)
@@ -560,6 +568,20 @@ fn gen_register_properties(
   Ok(gen)
 }
 
+fn gen_enum_type(
+  gen: Generator,
+  name: String,
+  variants: List(String),
+) -> Result(Generator, CodegenError) {
+  use <- bool.guard(when: variants == [], return: Error(EmptyEnumError))
+  let variants =
+    variants
+    |> list.map(fn(v) { "  " <> justin.pascal_case(v) <> "\n" })
+    |> string.join("")
+  let src = "pub type " <> name <> " {\n" <> variants <> "}"
+  gen_add_type(gen, name, src)
+}
+
 fn gen_register_nullable(gen: Generator, nullable: Bool) -> Generator {
   case nullable {
     False -> gen
@@ -571,8 +593,9 @@ fn gen_add_encoder(
   gen: Generator,
   name: Option(String),
   schema: Schema,
+  position_name: String,
 ) -> Result(Generator, CodegenError) {
-  use out <- result.try(en_schema(gen, schema, option.Some("data")))
+  use out <- result.try(en_schema(schema, option.Some("data"), position_name))
   let src = "pub fn to_json(data: " <> out.type_name <> ") -> json.Json {
   " <> out.src <> "
 }"
@@ -588,8 +611,9 @@ fn gen_add_decoder(
   gen: Generator,
   name: Option(String),
   schema: Schema,
+  position_name: String,
 ) -> Result(Generator, CodegenError) {
-  use out <- result.try(de_schema(gen, schema))
+  use out <- result.try(de_schema(schema, position_name))
   let src = "pub fn decode() -> decode.Decoder(" <> out.type_name <> ") {
   " <> out.src <> "
 }"
@@ -621,21 +645,6 @@ fn gen_add_type(
   Ok(Generator(..gen, types:))
 }
 
-fn gen_definitions(
-  gen: Generator,
-  schema: RootSchema,
-) -> Result(Generator, CodegenError) {
-  Ok(gen)
-}
-
-fn gen_decoders(gen: Generator, schema: RootSchema) -> Generator {
-  gen
-}
-
-fn gen_encoders(gen: Generator, schema: RootSchema) -> Generator {
-  gen
-}
-
 fn gen_to_string(gen: Generator) -> String {
   let imp = fn(used, module) {
     case used {
@@ -649,6 +658,7 @@ fn gen_to_string(gen: Generator) -> String {
       imp(gen.generate_decoders, "decode"),
       imp(gen.dict_used, "gleam/dict"),
       imp(gen.dynamic_used, "gleam/dynamic"),
+      imp(gen.generate_encoders, "gleam/json"),
       imp(gen.option_used, "gleam/option"),
     ]
     |> list.flatten
@@ -695,52 +705,55 @@ fn gen_to_string(gen: Generator) -> String {
 }
 
 fn en_schema(
-  gen: Generator,
   schema: Schema,
   data: Option(String),
+  position_name: String,
 ) -> Result(Out, CodegenError) {
   case schema {
     Discriminator(_, _) -> todo
     Elements(schema:, nullable:, metadata: _) ->
-      en_elements(gen, schema, nullable, data)
+      en_elements(schema, nullable, data, position_name)
     Empty -> Error(CannotConvertEmptyToJsonError)
-    Enum(_, _, _) -> todo
+    Enum(nullable:, variants:, metadata: _) ->
+      en_enum(variants, nullable, data, position_name)
     Properties(nullable:, schema:, metadata: _) -> todo as "en properties"
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(en_type(type_, nullable, data))
     Values(schema:, nullable:, metadata: _) ->
-      en_values(gen, schema, nullable, data)
+      en_values(schema, nullable, data, position_name)
   }
 }
 
-fn de_schema(gen: Generator, schema: Schema) -> Result(Out, CodegenError) {
+fn de_schema(schema: Schema, position_name: String) -> Result(Out, CodegenError) {
   case schema {
     Discriminator(_, _) -> todo
     Elements(schema:, nullable:, metadata: _) ->
-      de_elements(gen, schema, nullable)
+      de_elements(schema, nullable, position_name)
     Empty -> Ok(Out("decode.dynamic", "dynamic.Dynamic"))
-    Enum(_, _, _) -> todo
+    Enum(nullable:, variants:, metadata: _) ->
+      de_enum(variants, nullable, position_name)
     Properties(nullable:, schema:, metadata: _) ->
-      de_properties(gen, schema, nullable)
+      de_properties(schema, nullable, position_name)
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(de_type(type_, nullable))
-    Values(schema:, nullable:, metadata: _) -> de_values(gen, schema, nullable)
+    Values(schema:, nullable:, metadata: _) ->
+      de_values(schema, nullable, position_name)
   }
 }
 
 fn de_properties(
-  gen: Generator,
   schema: PropertiesSchema,
   nullable: Bool,
+  position_name: String,
 ) -> Result(Out, CodegenError) {
-  let result = de_properties_schema(gen, schema)
+  let result = de_properties_schema(schema, position_name)
   use Out(src:, type_name:) <- result.map(result)
   de_nullable(src, type_name, nullable)
 }
 
 fn de_properties_schema(
-  gen: Generator,
   schema: PropertiesSchema,
+  position_name: String,
 ) -> Result(Out, CodegenError) {
   let PropertiesSchema(
     properties:,
@@ -751,12 +764,16 @@ fn de_properties_schema(
 }
 
 fn en_values(
-  gen: Generator,
   schema: Schema,
   nullable: Bool,
   data: Option(String),
+  position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(en_schema(gen, schema, option.None))
+  use Out(src:, type_name:) <- result.map(en_schema(
+    schema,
+    option.None,
+    position_name,
+  ))
   let type_name = "dict.Dict(String, " <> type_name <> ")"
   let data = option.unwrap(data, "_")
   case nullable {
@@ -773,13 +790,52 @@ fn en_values(
   }
 }
 
+fn en_enum(
+  variants: List(String),
+  nullable: Bool,
+  data: Option(String),
+  position_name: String,
+) -> Result(Out, CodegenError) {
+  let type_name = position_name
+  let src = "json.string(case " <> option.unwrap(data, "data") <> " {\n"
+  let variants =
+    variants
+    |> list.map(fn(v) {
+      "    " <> justin.pascal_case(v) <> " -> \"" <> v <> "\"\n"
+    })
+    |> string.concat
+  let src = src <> variants <> "  })"
+
+  let src = case nullable || data == option.None {
+    True -> "fn(data) { " <> src <> " }"
+    False -> src
+  }
+
+  let out = case nullable {
+    True -> {
+      let type_name = "option.Option(" <> type_name <> ")"
+      let src = case data {
+        option.Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
+        option.None -> "json.nullable(_, " <> src <> ")"
+      }
+      Out(src:, type_name:)
+    }
+    False -> Out(src:, type_name:)
+  }
+  Ok(out)
+}
+
 fn en_elements(
-  gen: Generator,
   schema: Schema,
   nullable: Bool,
   data: Option(String),
+  position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(en_schema(gen, schema, option.None))
+  use Out(src:, type_name:) <- result.map(en_schema(
+    schema,
+    option.None,
+    position_name,
+  ))
   let type_name = "List(" <> type_name <> ")"
   let data = option.unwrap(data, "_")
   case nullable {
@@ -796,23 +852,42 @@ fn en_elements(
   }
 }
 
+fn de_enum(
+  variants: List(String),
+  nullable: Bool,
+  position_name: String,
+) -> Result(Out, CodegenError) {
+  let type_name = position_name
+  let src =
+    "decode.then(decode.string, fn(s) {
+    case s {\n"
+  let variants =
+    list.map(variants, fn(v) {
+      "      \"" <> v <> "\" -> decode.into(" <> justin.pascal_case(v) <> ")\n"
+    })
+  let src = src <> string.concat(variants)
+  let src = src <> "      _ -> decode.fail(" <> type_name <> ")\n"
+  let src = src <> "    }\n  })"
+  Ok(de_nullable(src, type_name, nullable))
+}
+
 fn de_values(
-  gen: Generator,
   schema: Schema,
   nullable: Bool,
+  position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(de_schema(gen, schema))
+  use Out(src:, type_name:) <- result.map(de_schema(schema, position_name))
   let type_name = "dict.Dict(String, " <> type_name <> ")"
   let src = "decode.dict(decode.string, " <> src <> ")"
   de_nullable(src, type_name, nullable)
 }
 
 fn de_elements(
-  gen: Generator,
   schema: Schema,
   nullable: Bool,
+  position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(de_schema(gen, schema))
+  use Out(src:, type_name:) <- result.map(de_schema(schema, position_name))
   let type_name = "List(" <> type_name <> ")"
   let src = "decode.list(" <> src <> ")"
   de_nullable(src, type_name, nullable)

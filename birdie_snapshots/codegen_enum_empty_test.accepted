@@ -1,0 +1,11 @@
+---
+version: 1.2.1
+title: codegen_enum_empty_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_enum_empty_test
+---
+RootSchema([], Enum(False, [], []))
+
+-----------------------------------------------------------
+
+ERROR: EmptyEnumError

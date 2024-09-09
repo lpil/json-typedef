@@ -1,0 +1,47 @@
+---
+version: 1.2.1
+title: codegen_enum_directions_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_enum_directions_test
+---
+RootSchema(
+  [],
+  Enum(
+    False,
+    [],
+    ["UP", "DOWN", "LEFT", "RIGHT"],
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub type Data {
+  Up
+  Down
+  Left
+  Right
+}
+
+pub fn decode() -> decode.Decoder(Data) {
+  decode.then(decode.string, fn(s) {
+    case s {
+      "UP" -> decode.into(Up)
+      "DOWN" -> decode.into(Down)
+      "LEFT" -> decode.into(Left)
+      "RIGHT" -> decode.into(Right)
+      _ -> decode.fail(Data)
+    }
+  })
+}
+
+pub fn to_json(data: Data) -> json.Json {
+  json.string(case data {
+    Up -> "UP"
+    Down -> "DOWN"
+    Left -> "LEFT"
+    Right -> "RIGHT"
+  })
+}

@@ -1,0 +1,52 @@
+---
+version: 1.2.1
+title: codegen_element_enum_directions_nullable_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_element_enum_directions_nullable_test
+---
+RootSchema(
+  [],
+  Elements(
+    False,
+    [],
+    Enum(
+      True,
+      [],
+      ["UP", "DOWN", "LEFT", "RIGHT"],
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type DataElement {
+  Up
+  Down
+  Left
+  Right
+}
+
+pub fn decode() -> decode.Decoder(List(option.Option(Data))) {
+  decode.list(decode.nullable(decode.then(decode.string, fn(s) {
+    case s {
+      "UP" -> decode.into(Up)
+      "DOWN" -> decode.into(Down)
+      "LEFT" -> decode.into(Left)
+      "RIGHT" -> decode.into(Right)
+      _ -> decode.fail(Data)
+    }
+  })))
+}
+
+pub fn to_json(data: List(option.Option(Data))) -> json.Json {
+  json.array(data, json.nullable(_, fn(data) { json.string(case data {
+    Up -> "UP"
+    Down -> "DOWN"
+    Left -> "LEFT"
+    Right -> "RIGHT"
+  }) }))
+}

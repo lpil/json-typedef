@@ -16,6 +16,7 @@ RootSchema(
 -----------------------------------------------------------
 
 import decode
+import gleam/json
 
 pub fn decode() -> decode.Decoder(List(String)) {
   decode.list(decode.string)
