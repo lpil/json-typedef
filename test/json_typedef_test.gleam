@@ -259,209 +259,229 @@ pub fn to_json_type_metadata_test() {
   |> birdie.snap("to_json_type_metadata_test")
 }
 
-fn to_decoder(schema: json_typedef.RootSchema) -> String {
-  let result =
-    json_typedef.codegen()
-    |> json_typedef.generate_decoders(True)
-    |> json_typedef.generate_encoders(True)
-    |> json_typedef.generate(schema)
+fn snap_format(
+  result: Result(String, json_typedef.CodegenError),
+  schema: json_typedef.RootSchema,
+) -> String {
   let code = case result {
     Ok(code) -> code
-    Error(e) -> pprint.format(e)
+    Error(e) -> "ERROR: " <> pprint.format(e)
   }
   pprint.format(schema)
   <> "\n\n-----------------------------------------------------------\n\n"
   <> code
 }
 
-pub fn decoder_type_empty_test() {
+fn to_decoder(schema: json_typedef.RootSchema) -> String {
+  json_typedef.codegen()
+  |> json_typedef.generate_decoders(True)
+  |> json_typedef.generate_encoders(False)
+  |> json_typedef.generate(schema)
+  |> snap_format(schema)
+}
+
+fn to_encoder_and_decoder(schema: json_typedef.RootSchema) -> String {
+  json_typedef.codegen()
+  |> json_typedef.generate_decoders(True)
+  |> json_typedef.generate_encoders(True)
+  |> json_typedef.generate(schema)
+  |> snap_format(schema)
+}
+
+pub fn codegen_decoder_type_empty_test() {
   RootSchema([], json_typedef.Empty)
   |> to_decoder
-  |> birdie.snap("decoder_type_empty")
+  |> birdie.snap("codegen_decoder_type_empty")
 }
 
-pub fn decoder_type_boolean_test() {
+pub fn codegen_type_empty_test() {
+  RootSchema([], json_typedef.Empty)
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_empty")
+}
+
+pub fn codegen_type_boolean_test() {
   RootSchema([], Type(False, [], json_typedef.Boolean))
-  |> to_decoder
-  |> birdie.snap("decoder_type_boolean")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_boolean")
 }
 
-pub fn decoder_type_string_test() {
+pub fn codegen_type_string_test() {
   RootSchema([], Type(False, [], json_typedef.String))
-  |> to_decoder
-  |> birdie.snap("decoder_type_string")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_string")
 }
 
-pub fn decoder_type_timestamp_test() {
+pub fn codegen_type_timestamp_test() {
   RootSchema([], Type(False, [], json_typedef.Timestamp))
-  |> to_decoder
-  |> birdie.snap("decoder_type_timestamp")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_timestamp")
 }
 
-pub fn decoder_type_float32_test() {
+pub fn codegen_type_float32_test() {
   RootSchema([], Type(False, [], json_typedef.Float32))
-  |> to_decoder
-  |> birdie.snap("decoder_type_float32")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_float32")
 }
 
-pub fn decoder_type_float64_test() {
+pub fn codegen_type_float64_test() {
   RootSchema([], Type(False, [], json_typedef.Float64))
-  |> to_decoder
-  |> birdie.snap("decoder_type_float64")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_float64")
 }
 
-pub fn decoder_type_int8_test() {
+pub fn codegen_type_int8_test() {
   RootSchema([], Type(False, [], json_typedef.Int8))
-  |> to_decoder
-  |> birdie.snap("decoder_type_int8")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_int8")
 }
 
-pub fn decoder_type_uint8_test() {
+pub fn codegen_type_uint8_test() {
   RootSchema([], Type(False, [], json_typedef.Uint8))
-  |> to_decoder
-  |> birdie.snap("decoder_type_uint8")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_uint8")
 }
 
-pub fn decoder_type_int16_test() {
+pub fn codegen_type_int16_test() {
   RootSchema([], Type(False, [], json_typedef.Int16))
-  |> to_decoder
-  |> birdie.snap("decoder_type_int16")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_int16")
 }
 
-pub fn decoder_type_uint16_test() {
+pub fn codegen_type_uint16_test() {
   RootSchema([], Type(False, [], json_typedef.Uint16))
-  |> to_decoder
-  |> birdie.snap("decoder_type_uint16")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_uint16")
 }
 
-pub fn decoder_type_int32_test() {
+pub fn codegen_type_int32_test() {
   RootSchema([], Type(False, [], json_typedef.Int32))
-  |> to_decoder
-  |> birdie.snap("decoder_type_int32")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_int32")
 }
 
-pub fn decoder_type_uint32_test() {
+pub fn codegen_type_uint32_test() {
   RootSchema([], Type(False, [], json_typedef.Uint32))
-  |> to_decoder
-  |> birdie.snap("decoder_type_uint32")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_uint32")
 }
 
-pub fn decoder_type_nullable_boolean_test() {
+pub fn codegen_type_nullable_boolean_test() {
   RootSchema([], Type(True, [], json_typedef.Boolean))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_boolean")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_boolean")
 }
 
-pub fn decoder_type_nullable_string_test() {
+pub fn codegen_type_nullable_string_test() {
   RootSchema([], Type(True, [], json_typedef.String))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_string")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_string")
 }
 
-pub fn decoder_type_nullable_timestamp_test() {
+pub fn codegen_type_nullable_timestamp_test() {
   RootSchema([], Type(True, [], json_typedef.Timestamp))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_timestamp")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_timestamp")
 }
 
-pub fn decoder_type_nullable_float32_test() {
+pub fn codegen_type_nullable_float32_test() {
   RootSchema([], Type(True, [], json_typedef.Float32))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_float32")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_float32")
 }
 
-pub fn decoder_type_nullable_float64_test() {
+pub fn codegen_type_nullable_float64_test() {
   RootSchema([], Type(True, [], json_typedef.Float64))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_float64")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_float64")
 }
 
-pub fn decoder_type_nullable_int8_test() {
+pub fn codegen_type_nullable_int8_test() {
   RootSchema([], Type(True, [], json_typedef.Int8))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_int8")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_int8")
 }
 
-pub fn decoder_type_nullable_uint8_test() {
+pub fn codegen_type_nullable_uint8_test() {
   RootSchema([], Type(True, [], json_typedef.Uint8))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_uint8")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_uint8")
 }
 
-pub fn decoder_type_nullable_int16_test() {
+pub fn codegen_type_nullable_int16_test() {
   RootSchema([], Type(True, [], json_typedef.Int16))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_int16")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_int16")
 }
 
-pub fn decoder_type_nullable_uint16_test() {
+pub fn codegen_type_nullable_uint16_test() {
   RootSchema([], Type(True, [], json_typedef.Uint16))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_uint16")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_uint16")
 }
 
-pub fn decoder_type_nullable_int32_test() {
+pub fn codegen_type_nullable_int32_test() {
   RootSchema([], Type(True, [], json_typedef.Int32))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_int32")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_int32")
 }
 
-pub fn decoder_type_nullable_uint32_test() {
+pub fn codegen_type_nullable_uint32_test() {
   RootSchema([], Type(True, [], json_typedef.Uint32))
-  |> to_decoder
-  |> birdie.snap("decoder_type_nullable_uint32")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_nullable_uint32")
 }
 
-pub fn decoder_type_elements_string_test() {
+pub fn codegen_type_elements_string_test() {
   RootSchema(
     [],
     json_typedef.Elements(False, [], Type(False, [], json_typedef.String)),
   )
-  |> to_decoder
-  |> birdie.snap("decoder_type_elements_string")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_elements_string")
 }
 
-pub fn decoder_type_elements_string_nullable_test() {
+pub fn codegen_type_elements_string_nullable_test() {
   RootSchema(
     [],
     json_typedef.Elements(True, [], Type(False, [], json_typedef.String)),
   )
-  |> to_decoder
-  |> birdie.snap("decoder_type_elements_string_nullable")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_elements_string_nullable")
 }
 
-pub fn decoder_type_elements_float_test() {
+pub fn codegen_type_elements_float_test() {
   RootSchema(
     [],
     json_typedef.Elements(False, [], Type(False, [], json_typedef.Float32)),
   )
-  |> to_decoder
-  |> birdie.snap("decoder_type_elements_float")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_elements_float")
 }
 
-pub fn decoder_type_elements_float_nullable_test() {
+pub fn codegen_type_elements_float_nullable_test() {
   RootSchema(
     [],
     json_typedef.Elements(True, [], Type(False, [], json_typedef.Float32)),
   )
-  |> to_decoder
-  |> birdie.snap("decoder_type_elements_float_nullable")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_elements_float_nullable")
 }
 
-pub fn decoder_type_values_float_test() {
+pub fn codegen_type_values_float_test() {
   RootSchema(
     [],
     json_typedef.Values(False, [], Type(False, [], json_typedef.Float32)),
   )
-  |> to_decoder
-  |> birdie.snap("decoder_type_values_float")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_values_float")
 }
 
-pub fn decoder_type_values_float_nullable_test() {
+pub fn codegen_type_values_float_nullable_test() {
   RootSchema(
     [],
     json_typedef.Values(True, [], Type(False, [], json_typedef.Float32)),
   )
-  |> to_decoder
-  |> birdie.snap("decoder_type_values_float_nullable")
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_type_values_float_nullable")
 }

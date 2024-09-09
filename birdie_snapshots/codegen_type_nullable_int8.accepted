@@ -1,10 +1,10 @@
 ---
 version: 1.2.1
-title: decoder_type_nullable_uint16
+title: codegen_type_nullable_int8
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_nullable_uint16_test
+test_name: codegen_type_nullable_int8_test
 ---
-RootSchema([], Type(True, [], Uint16))
+RootSchema([], Type(True, [], Int8))
 
 -----------------------------------------------------------
 

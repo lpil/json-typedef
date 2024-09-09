@@ -4,6 +4,7 @@
 
 //
 //
+// TODO: decoder annotation is wrong
 // TODO: discriminator should be able to be nullable!
 //
 //
@@ -477,7 +478,7 @@ type Out {
 }
 
 pub type CodegenError {
-  CodegenError
+  CannotConvertEmptyToJsonError
 }
 
 pub fn generate(
@@ -489,7 +490,7 @@ pub fn generate(
     True -> gen_add_decoder(gen, option.None, schema.schema)
     False -> Ok(gen)
   })
-  use gen <- result.map(case gen.generate_decoders {
+  use gen <- result.map(case gen.generate_encoders {
     True -> gen_add_encoder(gen, option.None, schema.schema)
     False -> Ok(gen)
   })
@@ -710,7 +711,7 @@ fn en_schema(
     Discriminator(_, _) -> todo
     Elements(schema:, nullable:, metadata: _) ->
       en_elements(gen, schema, nullable, data)
-    Empty -> todo as "reject empty encode"
+    Empty -> Error(CannotConvertEmptyToJsonError)
     Enum(_, _, _) -> todo
     Properties(nullable:, schema:, metadata: _) -> todo as "en properties"
     Ref(_, _, _) -> todo

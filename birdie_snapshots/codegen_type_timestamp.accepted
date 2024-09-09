@@ -1,10 +1,13 @@
 ---
 version: 1.2.1
-title: decoder_type_string
+title: codegen_type_timestamp
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_string_test
+test_name: codegen_type_timestamp_test
 ---
-RootSchema([], Type(False, [], String))
+RootSchema(
+  [],
+  Type(False, [], Timestamp),
+)
 
 -----------------------------------------------------------
 
