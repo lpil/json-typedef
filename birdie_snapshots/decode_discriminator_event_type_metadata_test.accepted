@@ -1,12 +1,12 @@
 ---
 version: 1.2.1
-title: decode_discriminator_event_type_nullable_test
+title: decode_discriminator_event_type_metadata_test
 file: ./test/json_typedef_test.gleam
-test_name: decode_discriminator_event_type_nullable_test
+test_name: decode_discriminator_event_type_metadata_test
 ---
 {
     "discriminator": "eventType",
-    "nullable": true,
+    "metadata": { "name": "wibble" },
     "mapping": {
         "USER_CREATED": {
             "properties": {
@@ -31,8 +31,8 @@ test_name: decode_discriminator_event_type_nullable_test
 Ok(RootSchema(
   [],
   Discriminator(
-    True,
-    [],
+    False,
+    [#("name", "wibble")],
     "eventType",
     [
       #(
