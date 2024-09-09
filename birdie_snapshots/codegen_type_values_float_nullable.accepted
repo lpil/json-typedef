@@ -1,13 +1,13 @@
 ---
 version: 1.2.1
-title: decoder_type_values_float
+title: codegen_type_values_float_nullable
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_values_float_test
+test_name: codegen_type_values_float_nullable_test
 ---
 RootSchema(
   [],
   Values(
-    False,
+    True,
     [],
     Type(False, [], Float32),
   ),
@@ -18,14 +18,15 @@ RootSchema(
 import decode
 import gleam/dict
 import gleam/dynamic
+import gleam/option
 
-pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(dict.Dict(String, Float)) {
-  decode.dict(decode.string, decode.float)
+pub fn decode(data: dynamic.Dynamic) -> decode.Decoder(option.Option(dict.Dict(String, Float))) {
+  decode.nullable(decode.dict(decode.string, decode.float))
   |> decode.from(data)
 }
 
-pub fn to_json(data: dict.Dict(String, Float)) -> json.Json {
-  helper__dict_to_json(data, json.float)
+pub fn to_json(data: option.Option(dict.Dict(String, Float))) -> json.Json {
+  json.nullable(data, helper__dict_to_json(_, json.float))
 }
 
 fn helper__dict_to_json(

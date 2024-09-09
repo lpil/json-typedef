@@ -1,8 +1,8 @@
 ---
 version: 1.2.1
-title: decoder_type_float32
+title: codegen_type_float32
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_float32_test
+test_name: codegen_type_float32_test
 ---
 RootSchema([], Type(False, [], Float32))
 

@@ -1,10 +1,10 @@
 ---
 version: 1.2.1
-title: decoder_type_uint8
+title: codegen_type_uint16
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_uint8_test
+test_name: codegen_type_uint16_test
 ---
-RootSchema([], Type(False, [], Uint8))
+RootSchema([], Type(False, [], Uint16))
 
 -----------------------------------------------------------
 

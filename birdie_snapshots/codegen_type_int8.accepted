@@ -1,10 +1,10 @@
 ---
 version: 1.2.1
-title: decoder_type_int32
+title: codegen_type_int8
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_int32_test
+test_name: codegen_type_int8_test
 ---
-RootSchema([], Type(False, [], Int32))
+RootSchema([], Type(False, [], Int8))
 
 -----------------------------------------------------------
 

@@ -1,8 +1,8 @@
 ---
 version: 1.2.1
-title: decoder_type_nullable_boolean
+title: codegen_type_nullable_boolean
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_nullable_boolean_test
+test_name: codegen_type_nullable_boolean_test
 ---
 RootSchema([], Type(True, [], Boolean))
 

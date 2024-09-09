@@ -1,8 +1,8 @@
 ---
 version: 1.2.1
-title: decoder_type_elements_string_nullable
+title: codegen_type_elements_string_nullable
 file: ./test/json_typedef_test.gleam
-test_name: decoder_type_elements_string_nullable_test
+test_name: codegen_type_elements_string_nullable_test
 ---
 RootSchema(
   [],
