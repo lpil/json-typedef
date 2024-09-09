@@ -503,7 +503,7 @@ fn gen_register(
   schema: Schema,
 ) -> Result(Generator, CodegenError) {
   case schema {
-    Empty -> Ok(gen)
+    Empty -> Ok(Generator(..gen, dynamic_used: True))
     Ref(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
     Type(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
     Enum(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
@@ -573,7 +573,6 @@ fn gen_add_encoder(
   schema: Schema,
 ) -> Result(Generator, CodegenError) {
   use out <- result.try(en_schema(gen, schema, option.Some("data")))
-  let gen = Generator(..gen, dynamic_used: True)
   let src = "pub fn to_json(data: " <> out.type_name <> ") -> json.Json {
   " <> out.src <> "
 }"
@@ -591,15 +590,8 @@ fn gen_add_decoder(
   schema: Schema,
 ) -> Result(Generator, CodegenError) {
   use out <- result.try(de_schema(gen, schema))
-  let gen = Generator(..gen, dynamic_used: True)
-  let src =
-    "pub fn decode(data: dynamic.Dynamic) -> decode.Decoder("
-    <> out.type_name
-    <> ") {
-  "
-    <> out.src
-    <> "
-  |> decode.from(data)
+  let src = "pub fn decode() -> decode.Decoder(" <> out.type_name <> ") {
+  " <> out.src <> "
 }"
 
   let name = case name {
