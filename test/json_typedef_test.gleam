@@ -633,3 +633,22 @@ pub fn codegen_element_enum_directions_nullable_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_element_enum_directions_nullable_test")
 }
+
+pub fn codegen_root_name_test() {
+  let schema =
+    RootSchema(
+      [],
+      json_typedef.Elements(
+        False,
+        [],
+        json_typedef.Enum(True, [], ["UP", "DOWN", "LEFT", "RIGHT"]),
+      ),
+    )
+  json_typedef.codegen()
+  |> json_typedef.generate_decoders(True)
+  |> json_typedef.generate_encoders(True)
+  |> json_typedef.root_name("Direction")
+  |> json_typedef.generate(schema)
+  |> snap_format(schema)
+  |> birdie.snap("codegen_root_name_test")
+}

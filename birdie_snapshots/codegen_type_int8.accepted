@@ -11,10 +11,10 @@ RootSchema([], Type(False, [], Int8))
 import decode
 import gleam/json
 
-pub fn decode() -> decode.Decoder(Int) {
+pub fn data_decoder() -> decode.Decoder(Int) {
   decode.int
 }
 
-pub fn to_json(data: Int) -> json.Json {
+pub fn data_to_json(data: Int) -> json.Json {
   json.int(data)
 }

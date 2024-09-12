@@ -25,7 +25,7 @@ pub type Data {
   Right
 }
 
-pub fn decode() -> decode.Decoder(Data) {
+pub fn data_decoder() -> decode.Decoder(Data) {
   decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
@@ -37,7 +37,7 @@ pub fn decode() -> decode.Decoder(Data) {
   })
 }
 
-pub fn to_json(data: Data) -> json.Json {
+pub fn data_to_json(data: Data) -> json.Json {
   json.string(case data {
     Up -> "UP"
     Down -> "DOWN"

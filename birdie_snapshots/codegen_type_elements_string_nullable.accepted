@@ -19,10 +19,10 @@ import decode
 import gleam/json
 import gleam/option
 
-pub fn decode() -> decode.Decoder(option.Option(List(String))) {
+pub fn data_decoder() -> decode.Decoder(option.Option(List(String))) {
   decode.nullable(decode.list(decode.string))
 }
 
-pub fn to_json(data: option.Option(List(String))) -> json.Json {
+pub fn data_to_json(data: option.Option(List(String))) -> json.Json {
   json.nullable(data, json.array(_, json.string))
 }

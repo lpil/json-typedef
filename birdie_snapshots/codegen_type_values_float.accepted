@@ -19,11 +19,11 @@ import decode
 import gleam/dict
 import gleam/json
 
-pub fn decode() -> decode.Decoder(dict.Dict(String, Float)) {
+pub fn data_decoder() -> decode.Decoder(dict.Dict(String, Float)) {
   decode.dict(decode.string, decode.float)
 }
 
-pub fn to_json(data: dict.Dict(String, Float)) -> json.Json {
+pub fn data_to_json(data: dict.Dict(String, Float)) -> json.Json {
   helper__dict_to_json(data, json.float)
 }
 
