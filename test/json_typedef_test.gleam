@@ -652,3 +652,66 @@ pub fn codegen_root_name_test() {
   |> snap_format(schema)
   |> birdie.snap("codegen_root_name_test")
 }
+
+pub fn codegen_properties_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      True,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("amount", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("key", json_typedef.Type(False, [], json_typedef.String)),
+        ],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_test")
+}
+
+pub fn codegen_properties_optional_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      True,
+      [],
+      json_typedef.PropertiesSchema(
+        [],
+        [
+          #("key", json_typedef.Type(False, [], json_typedef.String)),
+          #("amount", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_optional_test")
+}
+
+pub fn codegen_properties_mixed_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      True,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("wup", json_typedef.Type(False, [], json_typedef.String)),
+          #("key", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        [
+          #("what", json_typedef.Type(False, [], json_typedef.String)),
+          #("amount", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_mixed_test")
+}
