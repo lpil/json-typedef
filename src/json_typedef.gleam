@@ -550,6 +550,26 @@ fn gen_register(
   }
 }
 
+fn type_name(schema: Schema, name: String) -> String {
+  case schema {
+    Enum(..) | Properties(..) | Discriminator(..) -> name
+
+    Ref(name:, ..) -> name
+
+    Values(schema:, ..) -> "dict.Dict(" <> type_name(schema, name) <> ")"
+    Elements(schema:, ..) -> "List(" <> type_name(schema, name) <> ")"
+    Empty -> "dynamic.Dynamic"
+
+    Type(type_:, ..) ->
+      case type_ {
+        Boolean -> "Bool"
+        Float32 | Float64 -> "Float"
+        Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> "Int"
+        String | Timestamp -> "String"
+      }
+  }
+}
+
 fn gen_register_properties(
   gen: Generator,
   name: String,
@@ -575,7 +595,26 @@ fn gen_register_properties(
     }),
   )
 
-  Ok(gen)
+  // TODO: forbid duplicate names
+  let properties =
+    list.append(
+      list.map(properties, fn(p) { #(p.0, p.1, False) }),
+      list.map(optional_properties, fn(p) { #(p.0, p.1, True) }),
+    )
+    |> list.sort(fn(a, b) { string.compare(a.0, b.0) })
+    |> list.map(fn(p) {
+      let n = justin.snake_case(p.0)
+      "    " <> n <> ": " <> type_name(p.1, name <> justin.pascal_case(p.0))
+    })
+    |> string.join(",\n")
+
+  let src = "pub type " <> name <> " {
+  " <> name <> "(
+" <> properties <> ",
+  )
+}"
+  let type_name = name
+  gen_add_type(gen, type_name, src)
 }
 
 fn gen_enum_type(
@@ -852,7 +891,7 @@ fn de_properties_schema(
 
   use properties <- result.try(
     list.try_map(properties, fn(prop) {
-      use s <- result.map(de_schema(prop.1, name))
+      use s <- result.map(de_schema(prop.1, name <> justin.pascal_case(prop.0)))
       #(prop.0, s, prop.2)
     }),
   )
@@ -887,26 +926,7 @@ fn de_properties_schema(
   })
 " <> fields
 
-  Ok(Out(src:, type_name: name))
-  // use Out(src:, type_name:) <- result.map(en_schema(
-  //   schema,
-  //   option.None,
-  //   position_name,
-  // ))
-  // let type_name = "List(" <> type_name <> ")"
-  // let data = option.unwrap(data, "_")
-  // case nullable {
-  //   False -> {
-  //     let src = "json.array(" <> data <> ", " <> src <> ")"
-  //     Out(src:, type_name:)
-  //   }
-  //   True -> {
-  //     let type_name = "option.Option(" <> type_name <> ")"
-  //     let src = "json.array(_, " <> src <> ")"
-  //     let src = "json.nullable(" <> data <> ", " <> src <> ")"
-  //     Out(src:, type_name:)
-  //   }
-  // }
+  Ok(de_nullable(src, name, nullable))
 }
 
 fn en_elements(

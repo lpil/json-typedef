@@ -715,3 +715,57 @@ pub fn codegen_properties_mixed_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_properties_mixed_test")
 }
+
+pub fn codegen_properties_nested_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      True,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("name", json_typedef.Type(False, [], json_typedef.String)),
+          #(
+            "values",
+            json_typedef.Properties(
+              True,
+              [],
+              json_typedef.PropertiesSchema(
+                [
+                  #("amount", json_typedef.Type(False, [], json_typedef.Uint8)),
+                  #("key", json_typedef.Type(False, [], json_typedef.String)),
+                ],
+                [],
+                False,
+              ),
+            ),
+          ),
+        ],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_nested_test")
+}
+
+pub fn codegen_properties_nullable_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      True,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("amount", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("key", json_typedef.Type(False, [], json_typedef.String)),
+        ],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_nullable_test")
+}
