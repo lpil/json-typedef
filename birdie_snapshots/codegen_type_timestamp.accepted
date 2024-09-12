@@ -14,10 +14,10 @@ RootSchema(
 import decode
 import gleam/json
 
-pub fn decode() -> decode.Decoder(String) {
+pub fn data_decoder() -> decode.Decoder(String) {
   decode.string
 }
 
-pub fn to_json(data: String) -> json.Json {
+pub fn data_to_json(data: String) -> json.Json {
   json.string(data)
 }

@@ -12,10 +12,10 @@ import decode
 import gleam/json
 import gleam/option
 
-pub fn decode() -> decode.Decoder(option.Option(Float)) {
+pub fn data_decoder() -> decode.Decoder(option.Option(Float)) {
   decode.nullable(decode.float)
 }
 
-pub fn to_json(data: option.Option(Float)) -> json.Json {
+pub fn data_to_json(data: option.Option(Float)) -> json.Json {
   json.nullable(data, json.float)
 }

@@ -29,7 +29,7 @@ pub type DataElement {
   Right
 }
 
-pub fn decode() -> decode.Decoder(List(Data)) {
+pub fn data_decoder() -> decode.Decoder(List(Data)) {
   decode.list(decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
@@ -41,7 +41,7 @@ pub fn decode() -> decode.Decoder(List(Data)) {
   }))
 }
 
-pub fn to_json(data: List(Data)) -> json.Json {
+pub fn data_to_json(data: List(Data)) -> json.Json {
   json.array(data, fn(data) { json.string(case data {
     Up -> "UP"
     Down -> "DOWN"

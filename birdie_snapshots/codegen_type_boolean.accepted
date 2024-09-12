@@ -11,10 +11,10 @@ RootSchema([], Type(False, [], Boolean))
 import decode
 import gleam/json
 
-pub fn decode() -> decode.Decoder(Bool) {
+pub fn data_decoder() -> decode.Decoder(Bool) {
   decode.bool
 }
 
-pub fn to_json(data: Bool) -> json.Json {
+pub fn data_to_json(data: Bool) -> json.Json {
   json.bool(data)
 }

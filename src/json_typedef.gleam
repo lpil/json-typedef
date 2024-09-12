@@ -452,6 +452,7 @@ pub opaque type Generator {
     dict_used: Bool,
     types: Dict(String, String),
     functions: Dict(String, String),
+    root_name: String,
   )
 }
 
@@ -464,7 +465,12 @@ pub fn codegen() -> Generator {
     generate_encoders: False,
     types: dict.new(),
     functions: dict.new(),
+    root_name: "Data",
   )
+}
+
+pub fn root_name(gen: Generator, root_name: String) -> Generator {
+  Generator(..gen, root_name:)
 }
 
 pub fn generate_encoders(gen: Generator, x: Bool) -> Generator {
@@ -488,14 +494,14 @@ pub fn generate(
   gen: Generator,
   schema: RootSchema,
 ) -> Result(String, CodegenError) {
-  let position = "Data"
-  use gen <- result.try(gen_register(gen, position, schema.schema))
+  let name = justin.pascal_case(gen.root_name)
+  use gen <- result.try(gen_register(gen, name, schema.schema))
   use gen <- result.try(case gen.generate_decoders {
-    True -> gen_add_decoder(gen, option.None, schema.schema, position)
+    True -> gen_add_decoder(gen, name, schema.schema)
     False -> Ok(gen)
   })
   use gen <- result.map(case gen.generate_encoders {
-    True -> gen_add_encoder(gen, option.None, schema.schema, position)
+    True -> gen_add_encoder(gen, name, schema.schema)
     False -> Ok(gen)
   })
   gen_to_string(gen)
@@ -592,37 +598,30 @@ fn gen_register_nullable(gen: Generator, nullable: Bool) -> Generator {
 
 fn gen_add_encoder(
   gen: Generator,
-  name: Option(String),
+  name: String,
   schema: Schema,
-  position_name: String,
 ) -> Result(Generator, CodegenError) {
-  use out <- result.try(en_schema(schema, option.Some("data"), position_name))
-  let src = "pub fn to_json(data: " <> out.type_name <> ") -> json.Json {
+  use out <- result.try(en_schema(schema, option.Some("data"), name))
+  let name = justin.snake_case(name) <> "_to_json"
+  let src = "pub fn " <> name <> "(data: " <> out.type_name <> ") -> json.Json {
   " <> out.src <> "
 }"
 
-  let name = case name {
-    option.Some(name) -> name <> "_to_json"
-    option.None -> "to_json"
-  }
   gen_add_function(gen, name, src)
 }
 
 fn gen_add_decoder(
   gen: Generator,
-  name: Option(String),
+  name: String,
   schema: Schema,
-  position_name: String,
 ) -> Result(Generator, CodegenError) {
-  use out <- result.try(de_schema(schema, position_name))
-  let src = "pub fn decode() -> decode.Decoder(" <> out.type_name <> ") {
+  use out <- result.try(de_schema(schema, name))
+  let fn_name = justin.snake_case(name) <> "_decoder"
+  let src =
+    "pub fn " <> fn_name <> "() -> decode.Decoder(" <> out.type_name <> ") {
   " <> out.src <> "
 }"
 
-  let name = case name {
-    option.Some(name) -> name <> "_decoder"
-    option.None -> "decoder"
-  }
   gen_add_function(gen, name, src)
 }
 

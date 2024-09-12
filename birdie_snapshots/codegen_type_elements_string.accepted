@@ -18,10 +18,10 @@ RootSchema(
 import decode
 import gleam/json
 
-pub fn decode() -> decode.Decoder(List(String)) {
+pub fn data_decoder() -> decode.Decoder(List(String)) {
   decode.list(decode.string)
 }
 
-pub fn to_json(data: List(String)) -> json.Json {
+pub fn data_to_json(data: List(String)) -> json.Json {
   json.array(data, json.string)
 }

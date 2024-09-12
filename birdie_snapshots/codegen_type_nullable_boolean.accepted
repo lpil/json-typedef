@@ -12,10 +12,10 @@ import decode
 import gleam/json
 import gleam/option
 
-pub fn decode() -> decode.Decoder(option.Option(Bool)) {
+pub fn data_decoder() -> decode.Decoder(option.Option(Bool)) {
   decode.nullable(decode.bool)
 }
 
-pub fn to_json(data: option.Option(Bool)) -> json.Json {
+pub fn data_to_json(data: option.Option(Bool)) -> json.Json {
   json.nullable(data, json.bool)
 }

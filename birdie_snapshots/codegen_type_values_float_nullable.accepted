@@ -20,11 +20,11 @@ import gleam/dict
 import gleam/json
 import gleam/option
 
-pub fn decode() -> decode.Decoder(option.Option(dict.Dict(String, Float))) {
+pub fn data_decoder() -> decode.Decoder(option.Option(dict.Dict(String, Float))) {
   decode.nullable(decode.dict(decode.string, decode.float))
 }
 
-pub fn to_json(data: option.Option(dict.Dict(String, Float))) -> json.Json {
+pub fn data_to_json(data: option.Option(dict.Dict(String, Float))) -> json.Json {
   json.nullable(data, helper__dict_to_json(_, json.float))
 }
 
