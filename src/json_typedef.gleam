@@ -2,12 +2,15 @@
 ////
 //// <https://datatracker.ietf.org/doc/html/rfc8927>
 
+// TODO: ensure field names are snake case
+
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option}
+import gleam/pair
 import gleam/result
 import gleam/string
 import justin
@@ -716,7 +719,8 @@ fn en_schema(
     Empty -> Error(CannotConvertEmptyToJsonError)
     Enum(nullable:, variants:, metadata: _) ->
       en_enum(variants, nullable, data, position_name)
-    Properties(nullable:, schema:, metadata: _) -> todo as "en properties"
+    Properties(nullable:, schema:, metadata: _) ->
+      en_properties_schema(schema, nullable, data, position_name)
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(en_type(type_, nullable, data))
     Values(schema:, nullable:, metadata: _) ->
@@ -733,7 +737,7 @@ fn de_schema(schema: Schema, position_name: String) -> Result(Out, CodegenError)
     Enum(nullable:, variants:, metadata: _) ->
       de_enum(variants, nullable, position_name)
     Properties(nullable:, schema:, metadata: _) ->
-      de_properties(schema, nullable, position_name)
+      de_properties_schema(schema, nullable, position_name)
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(de_type(type_, nullable))
     Values(schema:, nullable:, metadata: _) ->
@@ -741,18 +745,21 @@ fn de_schema(schema: Schema, position_name: String) -> Result(Out, CodegenError)
   }
 }
 
-fn de_properties(
+fn en_properties(
   schema: PropertiesSchema,
   nullable: Bool,
+  data: Option(String),
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  let result = de_properties_schema(schema, position_name)
+  let result = en_properties_schema(schema, nullable, data, position_name)
   use Out(src:, type_name:) <- result.map(result)
   de_nullable(src, type_name, nullable)
 }
 
-fn de_properties_schema(
+fn en_properties_schema(
   schema: PropertiesSchema,
+  nullable: Bool,
+  data: Option(String),
   position_name: String,
 ) -> Result(Out, CodegenError) {
   let PropertiesSchema(
@@ -760,7 +767,7 @@ fn de_properties_schema(
     optional_properties:,
     additional_properties: _,
   ) = schema
-  todo
+  Ok(Out(src: "todo", type_name: "todo"))
 }
 
 fn en_values(
@@ -823,6 +830,83 @@ fn en_enum(
     False -> Out(src:, type_name:)
   }
   Ok(out)
+}
+
+fn de_properties_schema(
+  schema: PropertiesSchema,
+  nullable: Bool,
+  name: String,
+) -> Result(Out, CodegenError) {
+  let PropertiesSchema(
+    properties:,
+    optional_properties:,
+    additional_properties: _,
+  ) = schema
+
+  let properties =
+    list.append(
+      list.map(properties, fn(p) { #(p.0, p.1, False) }),
+      list.map(optional_properties, fn(p) { #(p.0, p.1, True) }),
+    )
+    |> list.sort(fn(a, b) { string.compare(a.0, b.0) })
+
+  use properties <- result.try(
+    list.try_map(properties, fn(prop) {
+      use s <- result.map(de_schema(prop.1, name))
+      #(prop.0, s, prop.2)
+    }),
+  )
+
+  let params =
+    properties
+    |> list.map(fn(n) { "    use " <> n.0 <> " <- decode.parameter" })
+    |> string.join("\n")
+
+  let fields =
+    properties
+    |> list.map(fn(p) {
+      case p.2 {
+        True -> "  |> decode.optional_field(\""
+        False -> "  |> decode.field(\""
+      }
+      <> p.0
+      <> "\", "
+      <> { p.1 }.src
+      <> ")"
+    })
+    |> string.join("\n")
+
+  let keys =
+    properties
+    |> list.map(fn(n) { n.0 <> ":" })
+    |> string.join(", ")
+
+  let src = "deocode.into({
+" <> params <> "
+    " <> name <> "(" <> keys <> ")
+  })
+" <> fields
+
+  Ok(Out(src:, type_name: name))
+  // use Out(src:, type_name:) <- result.map(en_schema(
+  //   schema,
+  //   option.None,
+  //   position_name,
+  // ))
+  // let type_name = "List(" <> type_name <> ")"
+  // let data = option.unwrap(data, "_")
+  // case nullable {
+  //   False -> {
+  //     let src = "json.array(" <> data <> ", " <> src <> ")"
+  //     Out(src:, type_name:)
+  //   }
+  //   True -> {
+  //     let type_name = "option.Option(" <> type_name <> ")"
+  //     let src = "json.array(_, " <> src <> ")"
+  //     let src = "json.nullable(" <> data <> ", " <> src <> ")"
+  //     Out(src:, type_name:)
+  //   }
+  // }
 }
 
 fn en_elements(

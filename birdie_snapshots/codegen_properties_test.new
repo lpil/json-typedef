@@ -1,0 +1,45 @@
+---
+version: 1.2.1
+title: codegen_properties_test
+---
+RootSchema(
+  [],
+  Properties(
+    True,
+    [],
+    PropertiesSchema(
+      [
+        #(
+          "amount",
+          Type(False, [], Uint8),
+        ),
+        #(
+          "key",
+          Type(False, [], String),
+        ),
+      ],
+      [],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
+    use amount <- decode.parameter
+    use key <- decode.parameter
+    Data(amount:, key:)
+  })
+  |> decode.field("amount", decode.int)
+  |> decode.field("key", decode.string)
+}
+
+pub fn data_to_json(data: todo) -> json.Json {
+  todo
+}
