@@ -30,14 +30,21 @@ import decode
 import gleam/json
 import gleam/option
 
-pub fn data_decoder() -> decode.Decoder(Data) {
-  deocode.into({
+pub type Data {
+  Data(
+    amount: Int,
+    key: String,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
+  decode.nullable(deocode.into({
     use amount <- decode.parameter
     use key <- decode.parameter
     Data(amount:, key:)
   })
   |> decode.optional_field("amount", decode.int)
-  |> decode.optional_field("key", decode.string)
+  |> decode.optional_field("key", decode.string))
 }
 
 pub fn data_to_json(data: todo) -> json.Json {

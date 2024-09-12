@@ -1,6 +1,6 @@
 ---
 version: 1.2.1
-title: codegen_properties_mixed_test
+title: codegen_properties_nullable_test
 ---
 RootSchema(
   [],
@@ -10,21 +10,15 @@ RootSchema(
     PropertiesSchema(
       [
         #(
-          "wup",
-          Type(False, [], String),
-        ),
-        #("key", Type(False, [], Uint8)),
-      ],
-      [
-        #(
-          "what",
-          Type(False, [], String),
-        ),
-        #(
           "amount",
           Type(False, [], Uint8),
         ),
+        #(
+          "key",
+          Type(False, [], String),
+        ),
       ],
+      [],
       False,
     ),
   ),
@@ -39,9 +33,7 @@ import gleam/option
 pub type Data {
   Data(
     amount: Int,
-    key: Int,
-    what: String,
-    wup: String,
+    key: String,
   )
 }
 
@@ -49,14 +41,10 @@ pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
   decode.nullable(deocode.into({
     use amount <- decode.parameter
     use key <- decode.parameter
-    use what <- decode.parameter
-    use wup <- decode.parameter
-    Data(amount:, key:, what:, wup:)
+    Data(amount:, key:)
   })
-  |> decode.optional_field("amount", decode.int)
-  |> decode.field("key", decode.int)
-  |> decode.optional_field("what", decode.string)
-  |> decode.field("wup", decode.string))
+  |> decode.field("amount", decode.int)
+  |> decode.field("key", decode.string))
 }
 
 pub fn data_to_json(data: todo) -> json.Json {
