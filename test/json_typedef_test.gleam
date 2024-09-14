@@ -886,3 +886,69 @@ pub fn codegen_discriminator_nullable_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_discriminator_nullable_test")
 }
+
+pub fn codegen_discriminator_as_elements_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(
+      False,
+      [],
+      json_typedef.Discriminator(False, [], "kind", [
+        #(
+          "up",
+          json_typedef.PropertiesSchema(
+            [#("height", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+        #(
+          "down",
+          json_typedef.PropertiesSchema(
+            [
+              #("depth", json_typedef.Type(False, [], json_typedef.Float32)),
+              #("note", json_typedef.Type(True, [], json_typedef.String)),
+            ],
+            [],
+            False,
+          ),
+        ),
+      ]),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_discriminator_as_elements_test")
+}
+
+pub fn codegen_discriminator_nullable_as_elements_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(
+      False,
+      [],
+      json_typedef.Discriminator(True, [], "kind", [
+        #(
+          "up",
+          json_typedef.PropertiesSchema(
+            [#("height", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+        #(
+          "down",
+          json_typedef.PropertiesSchema(
+            [
+              #("depth", json_typedef.Type(False, [], json_typedef.Float32)),
+              #("note", json_typedef.Type(True, [], json_typedef.String)),
+            ],
+            [],
+            False,
+          ),
+        ),
+      ]),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_discriminator_nullable_as_elements_test")
+}
