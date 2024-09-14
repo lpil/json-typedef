@@ -3,6 +3,7 @@
 //// <https://datatracker.ietf.org/doc/html/rfc8927>
 
 // TODO: ensure field names are snake case
+// TODO: ensure the tag field isn't used in any of the variants
 
 import gleam/bool
 import gleam/dict.{type Dict}
@@ -877,7 +878,7 @@ fn en_discriminator(
     <> string.join(clauses, "\n")
     <> "\n  }"
 
-  case nullable {
+  let out = case nullable {
     True -> {
       let type_name = "option.Option(" <> name <> ")"
       let data = option.unwrap(data, "data")
@@ -885,9 +886,14 @@ fn en_discriminator(
     option.Some(data) -> " <> src <> "
     option.None -> json.null()
   }"
-      Ok(Out(src:, type_name:))
+      Out(src:, type_name:)
     }
-    False -> Ok(Out(src:, type_name: name))
+    False -> Out(src:, type_name: name)
+  }
+
+  case data {
+    None -> Ok(Out(..out, src: "fn(data) { " <> out.src <> " }"))
+    Some(_) -> Ok(out)
   }
 }
 
