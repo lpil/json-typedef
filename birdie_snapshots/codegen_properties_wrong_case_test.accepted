@@ -1,0 +1,49 @@
+---
+version: 1.2.1
+title: codegen_properties_wrong_case_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_properties_wrong_case_test
+---
+RootSchema(
+  [],
+  Properties(
+    True,
+    [],
+    PropertiesSchema(
+      [
+        #(
+          "wibbleWobble",
+          Type(False, [], Uint8),
+        ),
+      ],
+      [],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type Data {
+  Data(
+    wibble_wobble: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
+  decode.nullable(deocode.into({
+    use wibble_wobble <- decode.parameter
+    Data(wibble_wobble:)
+  })
+  |> decode.field("wibbleWobble", decode.int))
+}
+
+pub fn data_to_json(data: Data) -> json.Json {
+  json.object([
+    #("wibbleWobble", json.int(data.wibble_wobble)),
+  ])
+}
