@@ -1,6 +1,8 @@
 ---
 version: 1.2.1
 title: codegen_properties_nested_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_properties_nested_test
 ---
 RootSchema(
   [],
@@ -81,6 +83,12 @@ pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
   |> decode.field("key", decode.string))))
 }
 
-pub fn data_to_json(data: todo) -> json.Json {
-  todo
+pub fn data_to_json(data: Data) -> json.Json {
+  json.object([
+    #("name", json.string(data.name)),
+    #("values", json.object([
+    #("amount", json.int(data.values.amount)),
+    #("key", json.string(data.values.key)),
+  ])),
+  ])
 }
