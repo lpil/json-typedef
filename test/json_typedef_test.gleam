@@ -769,3 +769,20 @@ pub fn codegen_properties_nullable_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_properties_nullable_test")
 }
+
+pub fn codegen_properties_wrong_case_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      True,
+      [],
+      json_typedef.PropertiesSchema(
+        [#("wibbleWobble", json_typedef.Type(False, [], json_typedef.Uint8))],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_wrong_case_test")
+}

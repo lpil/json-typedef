@@ -799,14 +799,34 @@ fn en_properties_schema(
   schema: PropertiesSchema,
   nullable: Bool,
   data: Option(String),
-  position_name: String,
+  name: String,
 ) -> Result(Out, CodegenError) {
   let PropertiesSchema(
     properties:,
     optional_properties:,
     additional_properties: _,
   ) = schema
-  Ok(Out(src: "todo", type_name: "todo"))
+  let data_name = option.unwrap(data, "data")
+
+  use properties <- result.try(
+    list.try_map(properties, fn(p) {
+      let name = name <> justin.pascal_case(p.0)
+      let data = data_name <> "." <> justin.snake_case(p.0)
+      use out <- result.map(en_schema(p.1, option.Some(data), name))
+      #(p.0, out.src)
+    }),
+  )
+
+  let properties =
+    properties
+    |> list.map(fn(p) { "    #(\"" <> p.0 <> "\", " <> p.1 <> ")," })
+    |> string.join("\n")
+
+  let src = "json.object([
+" <> properties <> "
+  ])"
+
+  Ok(Out(src:, type_name: name))
 }
 
 fn en_values(
