@@ -870,7 +870,16 @@ fn en_discriminator(
     <> string.join(clauses, "\n")
     <> "\n  }"
 
-  Ok(Out(src:, type_name: name))
+  case nullable {
+    True -> {
+      let type_name = "option.Option(" <> name <> ")"
+      let src = "fn(data) { " <> src <> " }"
+      Ok(Out(src:, type_name:))
+    }
+    False -> {
+      Ok(Out(src:, type_name: name))
+    }
+  }
 }
 
 fn en_properties_schema(
