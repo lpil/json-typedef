@@ -10,7 +10,6 @@ import gleam/dynamic.{type Dynamic}
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option}
-import gleam/pair
 import gleam/result
 import gleam/string
 import justin
@@ -776,56 +775,108 @@ fn gen_to_string(gen: Generator) -> String {
 fn en_schema(
   schema: Schema,
   data: Option(String),
-  position_name: String,
+  name: String,
 ) -> Result(Out, CodegenError) {
   case schema {
-    Discriminator(_, _, _, _) -> todo
+    Discriminator(nullable:, metadata: _, mapping:, tag:) ->
+      en_discriminator(mapping, tag, nullable, data, name)
     Elements(schema:, nullable:, metadata: _) ->
-      en_elements(schema, nullable, data, position_name)
+      en_elements(schema, nullable, data, name)
     Empty -> Error(CannotConvertEmptyToJsonError)
     Enum(nullable:, variants:, metadata: _) ->
-      en_enum(variants, nullable, data, position_name)
+      en_enum(variants, nullable, data, name)
     Properties(nullable:, schema:, metadata: _) ->
-      en_properties_schema(schema, nullable, data, position_name)
+      en_properties_schema(schema, nullable, property_data_name(data), name)
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(en_type(type_, nullable, data))
     Values(schema:, nullable:, metadata: _) ->
-      en_values(schema, nullable, data, position_name)
+      en_values(schema, nullable, data, name)
   }
 }
 
-fn de_schema(schema: Schema, position_name: String) -> Result(Out, CodegenError) {
+fn property_data_name(name: Option(String)) -> PropertyDataName {
+  case name {
+    option.None -> PropertyDataNone
+    option.Some(n) -> PropertyDataAccess(n)
+  }
+}
+
+fn de_schema(schema: Schema, name: String) -> Result(Out, CodegenError) {
   case schema {
-    Discriminator(_, _, _, _) -> todo
+    Discriminator(nullable:, metadata: _, mapping:, tag:) ->
+      de_discriminator(mapping, tag, nullable, name)
     Elements(schema:, nullable:, metadata: _) ->
-      de_elements(schema, nullable, position_name)
+      de_elements(schema, nullable, name)
     Empty -> Ok(Out("decode.dynamic", "dynamic.Dynamic"))
-    Enum(nullable:, variants:, metadata: _) ->
-      de_enum(variants, nullable, position_name)
+    Enum(nullable:, variants:, metadata: _) -> de_enum(variants, nullable, name)
     Properties(nullable:, schema:, metadata: _) ->
-      de_properties_schema(schema, nullable, position_name)
+      de_properties_schema(schema, nullable, name)
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(de_type(type_, nullable))
-    Values(schema:, nullable:, metadata: _) ->
-      de_values(schema, nullable, position_name)
+    Values(schema:, nullable:, metadata: _) -> de_values(schema, nullable, name)
   }
 }
 
-fn en_properties(
-  schema: PropertiesSchema,
+fn de_discriminator(
+  mapping: List(#(String, PropertiesSchema)),
+  tag: String,
+  nullable: Bool,
+  name: String,
+) -> Result(Out, CodegenError) {
+  Ok(Out(src: "todo", type_name: name))
+}
+
+type PropertyDataName {
+  PropertyDataNone
+  PropertyDataDirect
+  PropertyDataAccess(String)
+}
+
+fn en_discriminator(
+  mapping: List(#(String, PropertiesSchema)),
+  tag: String,
   nullable: Bool,
   data: Option(String),
-  position_name: String,
+  name: String,
 ) -> Result(Out, CodegenError) {
-  let result = en_properties_schema(schema, nullable, data, position_name)
-  use Out(src:, type_name:) <- result.map(result)
-  de_nullable(src, type_name, nullable)
+  use properties <- result.try(
+    list.try_map(mapping, fn(pair) {
+      let name = name <> justin.pascal_case(name)
+      let result = en_properties_schema(pair.1, False, PropertyDataDirect, name)
+      let props =
+        list.append(
+          list.map({ pair.1 }.properties, fn(p) { p.0 }),
+          list.map({ pair.1 }.optional_properties, fn(p) { p.0 }),
+        )
+      use Out(src:, ..) <- result.map(result)
+      #(pair.0, src, list.sort(props, string.compare))
+    }),
+  )
+
+  let clauses =
+    list.map(properties, fn(pair) {
+      let name = justin.pascal_case(pair.0)
+      let args = case pair.2 {
+        [] -> ""
+        a -> "(" <> string.join(a, ":, ") <> ":)"
+      }
+      "    " <> name <> args <> " -> " <> pair.1
+    })
+
+  let src =
+    "case "
+    <> option.unwrap(data, "data")
+    <> " {\n"
+    <> string.join(clauses, "\n")
+    <> "\n  }"
+
+  Ok(Out(src:, type_name: name))
 }
 
 fn en_properties_schema(
   schema: PropertiesSchema,
   nullable: Bool,
-  data: Option(String),
+  data: PropertyDataName,
   name: String,
 ) -> Result(Out, CodegenError) {
   let PropertiesSchema(
@@ -833,15 +884,19 @@ fn en_properties_schema(
     optional_properties:,
     additional_properties: _,
   ) = schema
-  let data_name = case data {
-    option.Some(name) if !nullable -> name
-    _ -> "data"
+  let property_data = fn(field_name) {
+    let field_name = justin.snake_case(field_name)
+    case data {
+      PropertyDataDirect -> field_name
+      PropertyDataAccess(name) if !nullable -> name <> "." <> field_name
+      _ -> "data." <> field_name
+    }
   }
 
   use properties <- result.try(
     list.try_map(properties, fn(p) {
       let name = name <> justin.pascal_case(p.0)
-      let data = data_name <> "." <> justin.snake_case(p.0)
+      let data = property_data(p.0)
       use out <- result.map(en_schema(p.1, option.Some(data), name))
       "\n    #(\"" <> p.0 <> "\", " <> out.src <> "),"
     }),
@@ -850,7 +905,7 @@ fn en_properties_schema(
   use optionals <- result.try(
     list.try_map(optional_properties, fn(p) {
       let n = name <> justin.pascal_case(p.0)
-      let d = data_name <> "." <> justin.snake_case(p.0)
+      let d = property_data(p.0)
       use Out(src: s, ..) <- result.map(en_schema(p.1, option.None, name))
       "  |> helper__optional_property(" <> d <> ", \"" <> n <> "\"" <> s <> ")"
     }),
@@ -869,15 +924,21 @@ fn en_properties_schema(
   }
 
   let src = case nullable {
-    True -> "case " <> option.unwrap(data, "data") <> " {
+    True -> {
+      let data = case data {
+        PropertyDataAccess(name) -> name
+        PropertyDataDirect | PropertyDataNone -> "data"
+      }
+      "case " <> data <> " {
     option.Some(data) -> " <> src <> "
     option.None -> json.null()
   }"
+    }
     False -> src
   }
 
   let src = case data {
-    option.None -> "fn(data) { " <> src <> " }"
+    PropertyDataNone -> "fn(data) { " <> src <> " }"
     _ -> src
   }
 
