@@ -7,7 +7,7 @@ test_name: codegen_properties_nested_test
 RootSchema(
   [],
   Properties(
-    True,
+    False,
     [],
     PropertiesSchema(
       [
@@ -18,7 +18,7 @@ RootSchema(
         #(
           "values",
           Properties(
-            True,
+            False,
             [],
             PropertiesSchema(
               [
@@ -51,7 +51,6 @@ RootSchema(
 
 import decode
 import gleam/json
-import gleam/option
 
 pub type Data {
   Data(
@@ -67,20 +66,20 @@ pub type Datavalues {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
-  decode.nullable(deocode.into({
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
     use name <- decode.parameter
     use values <- decode.parameter
     Data(name:, values:)
   })
   |> decode.field("name", decode.string)
-  |> decode.field("values", decode.nullable(deocode.into({
+  |> decode.field("values", deocode.into({
     use amount <- decode.parameter
     use key <- decode.parameter
     DataValues(amount:, key:)
   })
   |> decode.field("amount", decode.int)
-  |> decode.field("key", decode.string))))
+  |> decode.field("key", decode.string))
 }
 
 pub fn data_to_json(data: Data) -> json.Json {

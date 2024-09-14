@@ -453,6 +453,7 @@ pub opaque type Generator {
     dynamic_used: Bool,
     option_used: Bool,
     dict_used: Bool,
+    optional_properties_used: Bool,
     types: Dict(String, String),
     functions: Dict(String, String),
     root_name: String,
@@ -464,6 +465,7 @@ pub fn codegen() -> Generator {
     dynamic_used: False,
     option_used: False,
     dict_used: False,
+    optional_properties_used: False,
     generate_decoders: False,
     generate_encoders: False,
     types: dict.new(),
@@ -575,6 +577,11 @@ fn gen_register_properties(
   name: String,
   schema: PropertiesSchema,
 ) -> Result(Generator, CodegenError) {
+  let gen = case schema.optional_properties {
+    [] -> gen
+    _ -> Generator(..gen, optional_properties_used: True)
+  }
+
   // TODO: check that all names are unique
   let PropertiesSchema(
     properties:,
@@ -721,6 +728,25 @@ fn gen_to_string(gen: Generator) -> String {
     }
   }
 
+  let helper__optional_property = case
+    gen.generate_encoders && gen.optional_properties_used
+  {
+    False -> []
+    True -> [
+      "fn helper__optional_property(
+  object: List(#(String, json.Json)),
+  key: String,
+  value: option.Option(a),
+  to_json: fn(a) -> json.Json,
+) -> List(#(String, json.Json)), {
+  case value {
+    option.Some(value) -> [#(key, to_json(value)), ..object]
+    option.None -> object
+  }
+}",
+    ]
+  }
+
   let helper__dict_to_json = case gen.generate_encoders && gen.dict_used {
     False -> []
     True -> [
@@ -741,6 +767,7 @@ fn gen_to_string(gen: Generator) -> String {
     block(defs(gen.types)),
     block(defs(gen.functions)),
     helper__dict_to_json,
+    helper__optional_property,
   ]
   |> list.flatten
   |> string.join("\n\n")
@@ -806,32 +833,60 @@ fn en_properties_schema(
     optional_properties:,
     additional_properties: _,
   ) = schema
-  let data_name = option.unwrap(data, "data")
+  let data_name = case data {
+    option.Some(name) if !nullable -> name
+    _ -> "data"
+  }
 
   use properties <- result.try(
     list.try_map(properties, fn(p) {
       let name = name <> justin.pascal_case(p.0)
       let data = data_name <> "." <> justin.snake_case(p.0)
       use out <- result.map(en_schema(p.1, option.Some(data), name))
-      #(p.0, out.src)
+      "\n    #(\"" <> p.0 <> "\", " <> out.src <> "),"
     }),
   )
 
-  let properties =
-    properties
-    |> list.map(fn(p) { "    #(\"" <> p.0 <> "\", " <> p.1 <> ")," })
-    |> string.join("\n")
+  use optionals <- result.try(
+    list.try_map(optional_properties, fn(p) {
+      let n = name <> justin.pascal_case(p.0)
+      let d = data_name <> "." <> justin.snake_case(p.0)
+      use Out(src: s, ..) <- result.map(en_schema(p.1, option.None, name))
+      "  |> helper__optional_property(" <> d <> ", \"" <> n <> "\"" <> s <> ")"
+    }),
+  )
 
-  let src = "json.object([
-" <> properties <> "
-  ])"
+  let src = case schema.properties {
+    [] -> "[]"
+    _ -> "[" <> string.concat(properties) <> "\n  ]"
+  }
+
+  let src = case optional_properties {
+    [] -> "json.object(" <> src <> ")"
+    _ -> {
+      src <> "\n" <> string.join(optionals, "\n") <> "\n  |> json.object"
+    }
+  }
+
+  let src = case nullable {
+    True -> "case " <> option.unwrap(data, "data") <> " {
+    option.Some(data) -> " <> src <> "
+    option.None -> json.null()
+  }"
+    False -> src
+  }
 
   let src = case data {
     option.None -> "fn(data) { " <> src <> " }"
     _ -> src
   }
 
-  Ok(Out(src:, type_name: name))
+  let type_name = case nullable {
+    True -> "option.Option(" <> name <> ")"
+    False -> name
+  }
+
+  Ok(Out(src:, type_name:))
 }
 
 fn en_values(

@@ -657,7 +657,7 @@ pub fn codegen_properties_test() {
   RootSchema(
     [],
     json_typedef.Properties(
-      True,
+      False,
       [],
       json_typedef.PropertiesSchema(
         [
@@ -677,7 +677,7 @@ pub fn codegen_properties_optional_test() {
   RootSchema(
     [],
     json_typedef.Properties(
-      True,
+      False,
       [],
       json_typedef.PropertiesSchema(
         [],
@@ -697,7 +697,7 @@ pub fn codegen_properties_mixed_test() {
   RootSchema(
     [],
     json_typedef.Properties(
-      True,
+      False,
       [],
       json_typedef.PropertiesSchema(
         [
@@ -720,7 +720,7 @@ pub fn codegen_properties_nested_test() {
   RootSchema(
     [],
     json_typedef.Properties(
-      True,
+      False,
       [],
       json_typedef.PropertiesSchema(
         [
@@ -728,7 +728,7 @@ pub fn codegen_properties_nested_test() {
           #(
             "values",
             json_typedef.Properties(
-              True,
+              False,
               [],
               json_typedef.PropertiesSchema(
                 [
@@ -774,7 +774,7 @@ pub fn codegen_properties_wrong_case_test() {
   RootSchema(
     [],
     json_typedef.Properties(
-      True,
+      False,
       [],
       json_typedef.PropertiesSchema(
         [#("wibbleWobble", json_typedef.Type(False, [], json_typedef.Uint8))],
@@ -794,7 +794,7 @@ pub fn codegen_properties_in_elements_test() {
       False,
       [],
       json_typedef.Properties(
-        True,
+        False,
         [],
         json_typedef.PropertiesSchema(
           [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
@@ -806,4 +806,25 @@ pub fn codegen_properties_in_elements_test() {
   )
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_properties_in_elements_test")
+}
+
+pub fn codegen_properties_nullable_in_elements_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(
+      False,
+      [],
+      json_typedef.Properties(
+        True,
+        [],
+        json_typedef.PropertiesSchema(
+          [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
+          [],
+          False,
+        ),
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_nullable_in_elements_test")
 }

@@ -7,7 +7,7 @@ test_name: codegen_properties_test
 RootSchema(
   [],
   Properties(
-    True,
+    False,
     [],
     PropertiesSchema(
       [
@@ -30,7 +30,6 @@ RootSchema(
 
 import decode
 import gleam/json
-import gleam/option
 
 pub type Data {
   Data(
@@ -39,14 +38,14 @@ pub type Data {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
-  decode.nullable(deocode.into({
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
     use amount <- decode.parameter
     use key <- decode.parameter
     Data(amount:, key:)
   })
   |> decode.field("amount", decode.int)
-  |> decode.field("key", decode.string))
+  |> decode.field("key", decode.string)
 }
 
 pub fn data_to_json(data: Data) -> json.Json {

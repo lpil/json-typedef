@@ -1,0 +1,69 @@
+---
+version: 1.2.1
+title: codegen_properties_optional_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_properties_optional_test
+---
+RootSchema(
+  [],
+  Properties(
+    False,
+    [],
+    PropertiesSchema(
+      [],
+      [
+        #(
+          "key",
+          Type(False, [], String),
+        ),
+        #(
+          "amount",
+          Type(False, [], Uint8),
+        ),
+      ],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type Data {
+  Data(
+    amount: Int,
+    key: String,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
+    use amount <- decode.parameter
+    use key <- decode.parameter
+    Data(amount:, key:)
+  })
+  |> decode.optional_field("amount", decode.int)
+  |> decode.optional_field("key", decode.string)
+}
+
+pub fn data_to_json(data: Data) -> json.Json {
+  []
+  |> helper__optional_property(data.key, "DataKey"json.string)
+  |> helper__optional_property(data.amount, "DataAmount"json.int)
+  |> json.object
+}
+
+fn helper__optional_property(
+  object: List(#(String, json.Json)),
+  key: String,
+  value: option.Option(a),
+  to_json: fn(a) -> json.Json,
+) -> List(#(String, json.Json)), {
+  case value {
+    option.Some(value) -> [#(key, to_json(value)), ..object]
+    option.None -> object
+  }
+}
