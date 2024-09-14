@@ -828,3 +828,32 @@ pub fn codegen_properties_nullable_in_elements_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_properties_nullable_in_elements_test")
 }
+
+pub fn codegen_discriminator_test() {
+  RootSchema(
+    [],
+    json_typedef.Discriminator(False, [], "kind", [
+      #(
+        "up",
+        json_typedef.PropertiesSchema(
+          [#("height", json_typedef.Type(False, [], json_typedef.Uint8))],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "down",
+        json_typedef.PropertiesSchema(
+          [
+            #("depth", json_typedef.Type(False, [], json_typedef.Float32)),
+            #("note", json_typedef.Type(True, [], json_typedef.String)),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ]),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_discriminator_test")
+}

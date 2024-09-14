@@ -1,0 +1,79 @@
+---
+version: 1.2.1
+title: codegen_discriminator_test
+---
+RootSchema(
+  [],
+  Discriminator(
+    False,
+    [],
+    "kind",
+    [
+      #(
+        "up",
+        PropertiesSchema(
+          [
+            #(
+              "height",
+              Type(False, [], Uint8),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "down",
+        PropertiesSchema(
+          [
+            #(
+              "depth",
+              Type(False, [], Float32),
+            ),
+            #(
+              "note",
+              Type(True, [], String),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ],
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type Datadown {
+  Datadown(
+    depth: Float,
+    note: String,
+  )
+}
+
+pub type Dataup {
+  Dataup(
+    height: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(Data) {
+  todo
+}
+
+pub fn data_to_json(data: Data) -> json.Json {
+  case data {
+    Up(height:) -> json.object([
+    #("height", json.int(height)),
+  ])
+    Down(depth:, note:) -> json.object([
+    #("depth", json.float(depth)),
+    #("note", json.nullable(note, json.string)),
+  ])
+  }
+}
