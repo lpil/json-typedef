@@ -826,6 +826,11 @@ fn en_properties_schema(
 " <> properties <> "
   ])"
 
+  let src = case data {
+    option.None -> "fn(data) { " <> src <> " }"
+    _ -> src
+  }
+
   Ok(Out(src:, type_name: name))
 }
 

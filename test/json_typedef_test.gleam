@@ -786,3 +786,24 @@ pub fn codegen_properties_wrong_case_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_properties_wrong_case_test")
 }
+
+pub fn codegen_properties_in_elements_test() {
+  RootSchema(
+    [],
+    json_typedef.Elements(
+      False,
+      [],
+      json_typedef.Properties(
+        True,
+        [],
+        json_typedef.PropertiesSchema(
+          [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
+          [],
+          False,
+        ),
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_in_elements_test")
+}
