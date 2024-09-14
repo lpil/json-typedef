@@ -918,26 +918,26 @@ fn de_properties_schema(
 
   let params =
     properties
-    |> list.map(fn(n) { "    use " <> n.0 <> " <- decode.parameter" })
+    |> list.map(fn(n) {
+      let name = justin.snake_case(n.0)
+      "    use " <> name <> " <- decode.parameter"
+    })
     |> string.join("\n")
 
   let fields =
     properties
     |> list.map(fn(p) {
-      case p.2 {
+      let field = case p.2 {
         True -> "  |> decode.optional_field(\""
         False -> "  |> decode.field(\""
       }
-      <> p.0
-      <> "\", "
-      <> { p.1 }.src
-      <> ")"
+      field <> p.0 <> "\", " <> { p.1 }.src <> ")"
     })
     |> string.join("\n")
 
   let keys =
     properties
-    |> list.map(fn(n) { n.0 <> ":" })
+    |> list.map(fn(n) { justin.snake_case(n.0) <> ":" })
     |> string.join(", ")
 
   let src = "deocode.into({
