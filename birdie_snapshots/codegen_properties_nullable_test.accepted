@@ -49,9 +49,12 @@ pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
   |> decode.field("key", decode.string))
 }
 
-pub fn data_to_json(data: Data) -> json.Json {
-  json.object([
+pub fn data_to_json(data: option.Option(Data)) -> json.Json {
+  case data {
+    option.Some(data) -> json.object([
     #("amount", json.int(data.amount)),
     #("key", json.string(data.key)),
   ])
+    option.None -> json.null()
+  }
 }

@@ -1,0 +1,84 @@
+---
+version: 1.2.1
+title: codegen_properties_mixed_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_properties_mixed_test
+---
+RootSchema(
+  [],
+  Properties(
+    False,
+    [],
+    PropertiesSchema(
+      [
+        #(
+          "wup",
+          Type(False, [], String),
+        ),
+        #("key", Type(False, [], Uint8)),
+      ],
+      [
+        #(
+          "what",
+          Type(False, [], String),
+        ),
+        #(
+          "amount",
+          Type(False, [], Uint8),
+        ),
+      ],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type Data {
+  Data(
+    amount: Int,
+    key: Int,
+    what: String,
+    wup: String,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
+    use amount <- decode.parameter
+    use key <- decode.parameter
+    use what <- decode.parameter
+    use wup <- decode.parameter
+    Data(amount:, key:, what:, wup:)
+  })
+  |> decode.optional_field("amount", decode.int)
+  |> decode.field("key", decode.int)
+  |> decode.optional_field("what", decode.string)
+  |> decode.field("wup", decode.string)
+}
+
+pub fn data_to_json(data: Data) -> json.Json {
+  [
+    #("wup", json.string(data.wup)),
+    #("key", json.int(data.key)),
+  ]
+  |> helper__optional_property(data.what, "DataWhat"json.string)
+  |> helper__optional_property(data.amount, "DataAmount"json.int)
+  |> json.object
+}
+
+fn helper__optional_property(
+  object: List(#(String, json.Json)),
+  key: String,
+  value: option.Option(a),
+  to_json: fn(a) -> json.Json,
+) -> List(#(String, json.Json)), {
+  case value {
+    option.Some(value) -> [#(key, to_json(value)), ..object]
+    option.None -> object
+  }
+}

@@ -7,7 +7,7 @@ test_name: codegen_properties_wrong_case_test
 RootSchema(
   [],
   Properties(
-    True,
+    False,
     [],
     PropertiesSchema(
       [
@@ -26,7 +26,6 @@ RootSchema(
 
 import decode
 import gleam/json
-import gleam/option
 
 pub type Data {
   Data(
@@ -34,12 +33,12 @@ pub type Data {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
-  decode.nullable(deocode.into({
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
     use wibble_wobble <- decode.parameter
     Data(wibble_wobble:)
   })
-  |> decode.field("wibbleWobble", decode.int))
+  |> decode.field("wibbleWobble", decode.int)
 }
 
 pub fn data_to_json(data: Data) -> json.Json {
