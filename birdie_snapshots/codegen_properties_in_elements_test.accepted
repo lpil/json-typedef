@@ -1,0 +1,53 @@
+---
+version: 1.2.1
+title: codegen_properties_in_elements_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_properties_in_elements_test
+---
+RootSchema(
+  [],
+  Elements(
+    False,
+    [],
+    Properties(
+      True,
+      [],
+      PropertiesSchema(
+        [
+          #(
+            "count",
+            Type(False, [], Uint8),
+          ),
+        ],
+        [],
+        False,
+      ),
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type DataElement {
+  DataElement(
+    count: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(List(option.Option(Data))) {
+  decode.list(decode.nullable(deocode.into({
+    use count <- decode.parameter
+    Data(count:)
+  })
+  |> decode.field("count", decode.int)))
+}
+
+pub fn data_to_json(data: List(Data)) -> json.Json {
+  json.array(data, fn(data) { json.object([
+    #("count", json.int(data.count)),
+  ]) })
+}
