@@ -1,11 +1,13 @@
 ---
 version: 1.2.1
-title: codegen_discriminator_nullable_test
+title: codegen_discriminator_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_discriminator_test
 ---
 RootSchema(
   [],
   Discriminator(
-    True,
+    False,
     [],
     "kind",
     [
@@ -66,14 +68,16 @@ pub fn data_decoder() -> decode.Decoder(Data) {
   todo
 }
 
-pub fn data_to_json(data: option.Option(Data)) -> json.Json {
-  fn(data) { case data {
+pub fn data_to_json(data: Data) -> json.Json {
+  case data {
     Up(height:) -> json.object([
+    #("kind", json.string("up")),
     #("height", json.int(height)),
   ])
     Down(depth:, note:) -> json.object([
+    #("kind", json.string("down")),
     #("depth", json.float(depth)),
     #("note", json.nullable(note, json.string)),
   ])
-  } }
+  }
 }

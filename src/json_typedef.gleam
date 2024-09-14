@@ -9,7 +9,7 @@ import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/json.{type Json}
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import justin
@@ -649,7 +649,7 @@ fn gen_add_encoder(
   name: String,
   schema: Schema,
 ) -> Result(Generator, CodegenError) {
-  use out <- result.try(en_schema(schema, option.Some("data"), name))
+  use out <- result.try(en_schema(schema, Some("data"), name))
   let name = justin.snake_case(name) <> "_to_json"
   let src = "pub fn " <> name <> "(data: " <> out.type_name <> ") -> json.Json {
   " <> out.src <> "
@@ -786,7 +786,7 @@ fn en_schema(
     Enum(nullable:, variants:, metadata: _) ->
       en_enum(variants, nullable, data, name)
     Properties(nullable:, schema:, metadata: _) ->
-      en_properties_schema(schema, nullable, property_data_name(data), name)
+      en_properties_schema(schema, nullable, pro_data_name(data), name, None)
     Ref(_, _, _) -> todo
     Type(type_:, nullable:, metadata: _) -> Ok(en_type(type_, nullable, data))
     Values(schema:, nullable:, metadata: _) ->
@@ -794,10 +794,10 @@ fn en_schema(
   }
 }
 
-fn property_data_name(name: Option(String)) -> PropertyDataName {
+fn pro_data_name(name: Option(String)) -> PropertyDataName {
   case name {
-    option.None -> PropertyDataNone
-    option.Some(n) -> PropertyDataAccess(n)
+    None -> PropertyDataNone
+    Some(n) -> PropertyDataAccess(n)
   }
 }
 
@@ -842,7 +842,14 @@ fn en_discriminator(
   use properties <- result.try(
     list.try_map(mapping, fn(pair) {
       let name = name <> justin.pascal_case(name)
-      let result = en_properties_schema(pair.1, False, PropertyDataDirect, name)
+      let result =
+        en_properties_schema(
+          pair.1,
+          False,
+          PropertyDataDirect,
+          name,
+          Some(#(tag, pair.0)),
+        )
       let props =
         list.append(
           list.map({ pair.1 }.properties, fn(p) { p.0 }),
@@ -873,12 +880,14 @@ fn en_discriminator(
   case nullable {
     True -> {
       let type_name = "option.Option(" <> name <> ")"
-      let src = "fn(data) { " <> src <> " }"
+      let data = option.unwrap(data, "data")
+      let src = "case " <> data <> " {
+    option.Some(data) -> " <> src <> "
+    option.None -> json.null()
+  }"
       Ok(Out(src:, type_name:))
     }
-    False -> {
-      Ok(Out(src:, type_name: name))
-    }
+    False -> Ok(Out(src:, type_name: name))
   }
 }
 
@@ -887,6 +896,7 @@ fn en_properties_schema(
   nullable: Bool,
   data: PropertyDataName,
   name: String,
+  extra: Option(#(String, String)),
 ) -> Result(Out, CodegenError) {
   let PropertiesSchema(
     properties:,
@@ -906,23 +916,30 @@ fn en_properties_schema(
     list.try_map(properties, fn(p) {
       let name = name <> justin.pascal_case(p.0)
       let data = property_data(p.0)
-      use out <- result.map(en_schema(p.1, option.Some(data), name))
-      "\n    #(\"" <> p.0 <> "\", " <> out.src <> "),"
+      use out <- result.map(en_schema(p.1, Some(data), name))
+      #(p.0, out.src)
     }),
   )
 
-  use optionals <- result.try(
+  let properties =
+    case extra {
+      None -> properties
+      Some(#(k, v)) -> [#(k, "json.string(\"" <> v <> "\")"), ..properties]
+    }
+    |> list.map(fn(p) { "\n    #(\"" <> p.0 <> "\", " <> p.1 <> ")," })
+
+  use optionals <- result.map(
     list.try_map(optional_properties, fn(p) {
       let n = name <> justin.pascal_case(p.0)
       let d = property_data(p.0)
-      use Out(src: s, ..) <- result.map(en_schema(p.1, option.None, name))
+      use Out(src: s, ..) <- result.map(en_schema(p.1, None, name))
       "  |> helper__optional_property(" <> d <> ", \"" <> n <> "\"" <> s <> ")"
     }),
   )
 
-  let src = case schema.properties {
+  let src = case properties {
     [] -> "[]"
-    _ -> "[" <> string.concat(properties) <> "\n  ]"
+    p -> "[" <> string.concat(p) <> "\n  ]"
   }
 
   let src = case optional_properties {
@@ -956,7 +973,7 @@ fn en_properties_schema(
     False -> name
   }
 
-  Ok(Out(src:, type_name:))
+  Out(src:, type_name:)
 }
 
 fn en_values(
@@ -965,11 +982,7 @@ fn en_values(
   data: Option(String),
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(en_schema(
-    schema,
-    option.None,
-    position_name,
-  ))
+  use Out(src:, type_name:) <- result.map(en_schema(schema, None, position_name))
   let type_name = "dict.Dict(String, " <> type_name <> ")"
   let data = option.unwrap(data, "_")
   case nullable {
@@ -1002,7 +1015,7 @@ fn en_enum(
     |> string.concat
   let src = src <> variants <> "  })"
 
-  let src = case nullable || data == option.None {
+  let src = case nullable || data == None {
     True -> "fn(data) { " <> src <> " }"
     False -> src
   }
@@ -1011,8 +1024,8 @@ fn en_enum(
     True -> {
       let type_name = "option.Option(" <> type_name <> ")"
       let src = case data {
-        option.Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
-        option.None -> "json.nullable(_, " <> src <> ")"
+        Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
+        None -> "json.nullable(_, " <> src <> ")"
       }
       Out(src:, type_name:)
     }
@@ -1085,11 +1098,7 @@ fn en_elements(
   data: Option(String),
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(en_schema(
-    schema,
-    option.None,
-    position_name,
-  ))
+  use Out(src:, type_name:) <- result.map(en_schema(schema, None, position_name))
   let type_name = "List(" <> type_name <> ")"
   let data = option.unwrap(data, "_")
   case nullable {
@@ -1177,15 +1186,15 @@ fn en_nullable(
     True -> {
       let type_name = "option.Option(" <> type_name <> ")"
       let src = case data {
-        option.Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
-        option.None -> "json.nullable(_, " <> src <> ")"
+        Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
+        None -> "json.nullable(_, " <> src <> ")"
       }
       Out(src:, type_name:)
     }
     False -> {
       let src = case data {
-        option.Some(data) -> src <> "(" <> data <> ")"
-        option.None -> src
+        Some(data) -> src <> "(" <> data <> ")"
+        None -> src
       }
       Out(src:, type_name:)
     }
