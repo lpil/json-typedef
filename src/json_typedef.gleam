@@ -1275,7 +1275,7 @@ fn de_properties_schema(
     |> list.map(fn(n) { justin.snake_case(n.0) <> ":" })
     |> string.join(", ")
 
-  let src = "deocode.into({
+  let src = "decode.into({
 " <> params <> "
     " <> name <> "(" <> keys <> ")
   })

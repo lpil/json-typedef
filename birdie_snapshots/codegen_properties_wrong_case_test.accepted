@@ -34,7 +34,7 @@ pub type Data {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  deocode.into({
+  decode.into({
     use wibble_wobble <- decode.parameter
     Data(wibble_wobble:)
   })

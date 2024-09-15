@@ -40,7 +40,7 @@ pub type Data {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  deocode.into({
+  decode.into({
     use amount <- decode.parameter
     use key <- decode.parameter
     Data(amount:, key:)

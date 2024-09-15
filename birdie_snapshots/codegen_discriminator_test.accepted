@@ -65,12 +65,12 @@ pub fn data_decoder() -> decode.Decoder(Data) {
   decode.at(["kind"], decode.string)
   |> decode.then(fn(tag) {
     case tag {
-    "up" -> deocode.into({
+    "up" -> decode.into({
     use height <- decode.parameter
     DataUp(height:)
   })
   |> decode.field("height", decode.int)
-    "down" -> deocode.into({
+    "down" -> decode.into({
     use depth <- decode.parameter
     use note <- decode.parameter
     DataDown(depth:, note:)

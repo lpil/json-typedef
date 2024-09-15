@@ -58,7 +58,7 @@ pub type Wibble {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  deocode.into({
+  decode.into({
     use inner <- decode.parameter
     Data(inner:)
   })
