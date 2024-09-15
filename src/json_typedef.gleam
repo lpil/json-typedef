@@ -545,9 +545,7 @@ fn gen_register(
 
     Discriminator(nullable:, metadata: _, tag: _, mapping:) -> {
       let gen = gen_register_nullable(gen, nullable)
-      list.try_fold(mapping, gen, fn(gen, mapping) {
-        gen_register_properties(gen, name <> mapping.0, mapping.1)
-      })
+      gen_register_discriminator(gen, name, mapping)
     }
   }
 }
@@ -572,11 +570,46 @@ fn type_name(schema: Schema, name: String) -> String {
   }
 }
 
+fn gen_register_discriminator(
+  gen: Generator,
+  name: String,
+  mapping: List(#(String, PropertiesSchema)),
+) -> Result(Generator, CodegenError) {
+  use #(gen, src) <- result.try(
+    list.try_fold(mapping, #(gen, []), fn(pair, mapping) {
+      let name = name <> justin.pascal_case(mapping.0)
+      let result = type_variant(pair.0, name, mapping.1)
+      use #(gen, src) <- result.map(result)
+      #(gen, [src, ..pair.1])
+    }),
+  )
+
+  let src = "pub type " <> name <> " {
+" <> string.join(src, "\n") <> "
+}"
+  let type_name = name
+  gen_add_type(gen, type_name, src)
+}
+
 fn gen_register_properties(
   gen: Generator,
   name: String,
   schema: PropertiesSchema,
 ) -> Result(Generator, CodegenError) {
+  use #(gen, src) <- result.try(type_variant(gen, name, schema))
+
+  let src = "pub type " <> name <> " {
+" <> src <> "
+}"
+  let type_name = name
+  gen_add_type(gen, type_name, src)
+}
+
+fn type_variant(
+  gen: Generator,
+  name: String,
+  schema: PropertiesSchema,
+) -> Result(#(Generator, String), CodegenError) {
   let gen = case schema.optional_properties {
     [] -> gen
     _ -> Generator(..gen, optional_properties_used: True)
@@ -615,13 +648,11 @@ fn gen_register_properties(
     })
     |> string.join(",\n")
 
-  let src = "pub type " <> name <> " {
-  " <> name <> "(
+  let src = "  " <> name <> "(
 " <> properties <> ",
-  )
-}"
-  let type_name = name
-  gen_add_type(gen, type_name, src)
+  )"
+
+  Ok(#(gen, src))
 }
 
 fn gen_enum_type(

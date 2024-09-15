@@ -51,15 +51,12 @@ import decode
 import gleam/json
 import gleam/option
 
-pub type Datadown {
-  Datadown(
+pub type Data {
+  DataDown(
     depth: Float,
     note: String,
   )
-}
-
-pub type Dataup {
-  Dataup(
+  DataUp(
     height: Int,
   )
 }
