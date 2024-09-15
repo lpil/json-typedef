@@ -2,9 +2,6 @@
 ////
 //// <https://datatracker.ietf.org/doc/html/rfc8927>
 
-// TODO: ensure field names are snake case
-// TODO: ensure the tag field isn't used in any of the variants
-
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
@@ -660,7 +657,7 @@ fn ensure_no_duplicate_properties(
   let names = list.append(schema.properties, schema.optional_properties)
   let recorded = case extra {
     None -> set.new()
-    Some(k) -> set.from_list([k])
+    Some(k) -> set.from_list([justin.snake_case(k)])
   }
 
   list.try_fold(names, recorded, fn(recorded, pair) {
