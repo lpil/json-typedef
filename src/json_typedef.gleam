@@ -9,7 +9,7 @@ import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
-import gleam/set
+import gleam/set.{type Set}
 import gleam/string
 import justin
 
@@ -455,6 +455,7 @@ pub opaque type Generator {
     types: Dict(String, String),
     functions: Dict(String, String),
     root_name: String,
+    constructors: Set(String),
   )
 }
 
@@ -469,6 +470,7 @@ pub fn codegen() -> Generator {
     types: dict.new(),
     functions: dict.new(),
     root_name: "Data",
+    constructors: set.new(),
   )
 }
 
@@ -496,6 +498,7 @@ pub type CodegenError {
     constructor_name: String,
     property_name: String,
   )
+  DuplicateConstructorError(name: String)
 }
 
 pub fn generate(
@@ -553,6 +556,7 @@ fn gen_type(
   name: String,
   schema: Schema,
 ) -> Result(Generator, CodegenError) {
+  let name = justin.pascal_case(name)
   case schema {
     Empty -> Ok(Generator(..gen, dynamic_used: True))
     Ref(nullable:, ..) -> Ok(gen_register_nullable(gen, nullable))
@@ -683,7 +687,6 @@ fn type_variant(
     _ -> Generator(..gen, optional_properties_used: True)
   }
 
-  // TODO: check that all names are unique
   let PropertiesSchema(
     properties:,
     optional_properties:,
@@ -703,7 +706,6 @@ fn type_variant(
     }),
   )
 
-  // TODO: forbid duplicate names
   let properties =
     list.append(
       list.map(properties, fn(p) { #(p.0, p.1, False) }),
@@ -716,12 +718,25 @@ fn type_variant(
     })
     |> string.join(",\n")
 
-  // TODO: ensure constructor name isn't taken
+  use gen <- result.try(ensure_constructor_unique(gen, name))
+
   let src = "  " <> name <> "(
 " <> properties <> ",
   )"
 
   Ok(#(gen, src))
+}
+
+fn ensure_constructor_unique(
+  gen: Generator,
+  name: String,
+) -> Result(Generator, CodegenError) {
+  let before = set.size(gen.constructors)
+  let constructors = set.insert(gen.constructors, name)
+  case before == set.size(constructors) {
+    False -> Ok(Generator(..gen, constructors:))
+    True -> Error(DuplicateConstructorError(name))
+  }
 }
 
 fn gen_enum_type(
