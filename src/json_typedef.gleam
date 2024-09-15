@@ -12,6 +12,7 @@ import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/set
 import gleam/string
 import justin
 
@@ -493,6 +494,7 @@ type Out {
 pub type CodegenError {
   CannotConvertEmptyToJsonError
   EmptyEnumError
+  DuplicatePropertyError(type_name: String, property: String)
 }
 
 pub fn generate(
@@ -638,11 +640,36 @@ fn gen_register_properties(
   gen_add_type(gen, type_name, src)
 }
 
+fn ensure_no_duplicate_properties(
+  schema: PropertiesSchema,
+  extra: Option(#(String, _)),
+  type_name: String,
+) -> Result(Nil, CodegenError) {
+  let names = list.append(schema.properties, schema.optional_properties)
+  let recorded = case extra {
+    None -> set.new()
+    Some(#(k, _)) -> set.from_list([k])
+  }
+
+  list.try_fold(names, recorded, fn(recorded, pair) {
+    let field_name = justin.snake_case(pair.0)
+    let before = set.size(recorded)
+    let recorded = set.insert(recorded, field_name)
+    case before == set.size(recorded) {
+      False -> Ok(recorded)
+      True -> Error(DuplicatePropertyError(type_name, field_name))
+    }
+  })
+  |> result.replace(Nil)
+}
+
 fn type_variant(
   gen: Generator,
   name: String,
   schema: PropertiesSchema,
 ) -> Result(#(Generator, String), CodegenError) {
+  use _ <- result.try(ensure_no_duplicate_properties(schema, None, name))
+
   let gen = case schema.optional_properties {
     [] -> gen
     _ -> Generator(..gen, optional_properties_used: True)
