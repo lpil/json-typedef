@@ -997,3 +997,107 @@ pub fn codegen_ref_wrong_case_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_ref_wrong_case_test")
 }
+
+pub fn codegen_ref_properties_test() {
+  RootSchema(
+    [
+      #(
+        "wibble",
+        json_typedef.Properties(
+          False,
+          [],
+          json_typedef.PropertiesSchema(
+            [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+      ),
+    ],
+    json_typedef.Ref(False, [], "wibble"),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_properties_test")
+}
+
+pub fn codegen_ref_properties_properties_test() {
+  RootSchema(
+    [
+      #(
+        "wibble",
+        json_typedef.Properties(
+          False,
+          [],
+          json_typedef.PropertiesSchema(
+            [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+      ),
+    ],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [#("inner", json_typedef.Ref(False, [], "wibble"))],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_properties_properties_test")
+}
+
+pub fn codegen_ref_properties_nullable_test() {
+  RootSchema(
+    [
+      #(
+        "wibble",
+        json_typedef.Properties(
+          False,
+          [],
+          json_typedef.PropertiesSchema(
+            [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+      ),
+    ],
+    json_typedef.Ref(True, [], "wibble"),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_properties_nullable_test")
+}
+
+pub fn codegen_ref_properties_properties_nullable_test() {
+  RootSchema(
+    [
+      #(
+        "wibble",
+        json_typedef.Properties(
+          False,
+          [],
+          json_typedef.PropertiesSchema(
+            [#("count", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+      ),
+    ],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [#("inner", json_typedef.Ref(False, [], "wibble"))],
+        [],
+        True,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_properties_properties_nullable_test")
+}

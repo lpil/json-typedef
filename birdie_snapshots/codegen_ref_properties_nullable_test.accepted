@@ -1,0 +1,48 @@
+---
+version: 1.2.1
+title: codegen_ref_properties_nullable_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_properties_nullable_test
+---
+RootSchema(
+  [
+    #(
+      "wibble",
+      Properties(
+        False,
+        [],
+        PropertiesSchema(
+          [
+            #(
+              "count",
+              Type(False, [], Uint8),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ),
+  ],
+  Ref(True, [], "wibble"),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub type wibble {
+  wibble(
+    count: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(option.Option(Wibble)) {
+  decode.optional(wibble_decoder())
+}
+
+pub fn data_to_json(data: option.Option(Wibble)) -> json.Json {
+  json.nullable(data, wibble_to_json)
+}

@@ -499,20 +499,53 @@ pub fn generate(
   gen: Generator,
   schema: RootSchema,
 ) -> Result(String, CodegenError) {
-  let name = justin.pascal_case(gen.root_name)
-  use gen <- result.try(gen_register(gen, name, schema.schema))
+  let root = justin.pascal_case(gen.root_name)
+
+  use gen <- result.try(gen_types(gen, root, schema))
+
   use gen <- result.try(case gen.generate_decoders {
-    True -> gen_add_decoder(gen, name, schema.schema)
+    True -> gen_decoders(gen, root, schema)
     False -> Ok(gen)
   })
+
   use gen <- result.map(case gen.generate_encoders {
-    True -> gen_add_encoder(gen, name, schema.schema)
+    True -> gen_encoders(gen, root, schema)
     False -> Ok(gen)
   })
+
   gen_to_string(gen)
 }
 
-fn gen_register(
+fn gen_types(
+  gen: Generator,
+  root: String,
+  schema: RootSchema,
+) -> Result(Generator, CodegenError) {
+  use gen <- result.try(
+    list.try_fold(schema.definitions, gen, fn(gen, def) {
+      gen_type(gen, def.0, def.1)
+    }),
+  )
+  gen_type(gen, root, schema.schema)
+}
+
+fn gen_encoders(
+  gen: Generator,
+  root: String,
+  schema: RootSchema,
+) -> Result(Generator, CodegenError) {
+  gen_add_encoder(gen, root, schema.schema)
+}
+
+fn gen_decoders(
+  gen: Generator,
+  root: String,
+  schema: RootSchema,
+) -> Result(Generator, CodegenError) {
+  gen_add_decoder(gen, root, schema.schema)
+}
+
+fn gen_type(
   gen: Generator,
   name: String,
   schema: Schema,
@@ -534,13 +567,13 @@ fn gen_register(
 
     Elements(nullable:, schema:, ..) -> {
       let gen = gen_register_nullable(gen, nullable)
-      gen_register(gen, name <> "Element", schema)
+      gen_type(gen, name <> "Element", schema)
     }
 
     Values(nullable:, schema:, ..) -> {
       let gen = gen_register_nullable(gen, nullable)
       let gen = Generator(..gen, dict_used: True)
-      gen_register(gen, name <> "Value", schema)
+      gen_type(gen, name <> "Value", schema)
     }
 
     Discriminator(nullable:, metadata: _, tag: _, mapping:) -> {
@@ -624,14 +657,14 @@ fn type_variant(
 
   use gen <- result.try(
     list.try_fold(properties, gen, fn(gen, prop) {
-      gen_register(gen, name <> prop.0, prop.1)
+      gen_type(gen, name <> prop.0, prop.1)
     }),
   )
 
   use gen <- result.try(
     list.try_fold(optional_properties, gen, fn(gen, prop) {
       let gen = Generator(..gen, option_used: True)
-      gen_register(gen, name <> prop.0, prop.1)
+      gen_type(gen, name <> prop.0, prop.1)
     }),
   )
 
