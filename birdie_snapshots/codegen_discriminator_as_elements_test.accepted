@@ -69,7 +69,24 @@ pub type DataElementup {
 }
 
 pub fn data_decoder() -> decode.Decoder(List(Data)) {
-  decode.list(todo)
+  decode.list(decode.at(["kind"], decode.string)
+  |> decode.then(fn(tag) {
+    case tag {
+    "up" -> deocode.into({
+    use height <- decode.parameter
+    DataUp(height:)
+  })
+  |> decode.field("height", decode.int)
+    "down" -> deocode.into({
+    use depth <- decode.parameter
+    use note <- decode.parameter
+    DataDown(depth:, note:)
+  })
+  |> decode.field("depth", decode.float)
+  |> decode.field("note", decode.nullable(decode.string))
+      _ -> decode.fail("Data")
+    }
+  }))
 }
 
 pub fn data_to_json(data: List(Data)) -> json.Json {
