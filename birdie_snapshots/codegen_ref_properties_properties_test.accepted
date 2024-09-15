@@ -1,0 +1,72 @@
+---
+version: 1.2.1
+title: codegen_ref_properties_properties_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_properties_properties_test
+---
+RootSchema(
+  [
+    #(
+      "wibble",
+      Properties(
+        False,
+        [],
+        PropertiesSchema(
+          [
+            #(
+              "count",
+              Type(False, [], Uint8),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ),
+  ],
+  Properties(
+    False,
+    [],
+    PropertiesSchema(
+      [
+        #(
+          "inner",
+          Ref(False, [], "wibble"),
+        ),
+      ],
+      [],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub type Data {
+  Data(
+    inner: wibble,
+  )
+}
+
+pub type wibble {
+  wibble(
+    count: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
+    use inner <- decode.parameter
+    Data(inner:)
+  })
+  |> decode.field("inner", wibble_decoder())
+}
+
+pub fn data_to_json(data: Data) -> json.Json {
+  json.object([
+    #("inner", wibble_to_json(data.inner)),
+  ])
+}

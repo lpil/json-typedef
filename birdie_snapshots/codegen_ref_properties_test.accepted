@@ -1,0 +1,47 @@
+---
+version: 1.2.1
+title: codegen_ref_properties_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_properties_test
+---
+RootSchema(
+  [
+    #(
+      "wibble",
+      Properties(
+        False,
+        [],
+        PropertiesSchema(
+          [
+            #(
+              "count",
+              Type(False, [], Uint8),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ),
+  ],
+  Ref(False, [], "wibble"),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub type wibble {
+  wibble(
+    count: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(Wibble) {
+  wibble_decoder()
+}
+
+pub fn data_to_json(data: Wibble) -> json.Json {
+  wibble_to_json(data)
+}
