@@ -55,15 +55,12 @@ import decode
 import gleam/json
 import gleam/option
 
-pub type DataElementdown {
-  DataElementdown(
+pub type DataElement {
+  DataElementDown(
     depth: Float,
     note: String,
   )
-}
-
-pub type DataElementup {
-  DataElementup(
+  DataElementUp(
     height: Int,
   )
 }
