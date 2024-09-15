@@ -1,0 +1,69 @@
+---
+version: 1.2.1
+title: readme_example_test
+file: ./test/json_typedef_test.gleam
+test_name: readme_example_test
+---
+RootSchema(
+  [],
+  Properties(
+    False,
+    [],
+    PropertiesSchema(
+      [
+        #(
+          "createdAt",
+          Type(False, [], Timestamp),
+        ),
+        #("id", Type(False, [], String)),
+        #(
+          "isAdmin",
+          Type(False, [], Boolean),
+        ),
+        #(
+          "karma",
+          Type(False, [], Int32),
+        ),
+      ],
+      [],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub type Data {
+  Data(
+    created_at: String,
+    id: String,
+    is_admin: Bool,
+    karma: Int,
+  )
+}
+
+pub fn data_decoder() -> decode.Decoder(Data) {
+  deocode.into({
+    use created_at <- decode.parameter
+    use id <- decode.parameter
+    use is_admin <- decode.parameter
+    use karma <- decode.parameter
+    Data(created_at:, id:, is_admin:, karma:)
+  })
+  |> decode.field("createdAt", decode.string)
+  |> decode.field("id", decode.string)
+  |> decode.field("isAdmin", decode.bool)
+  |> decode.field("karma", decode.int)
+}
+
+pub fn data_to_json(data: Data) -> json.Json {
+  json.object([
+    #("createdAt", json.string(data.created_at)),
+    #("id", json.string(data.id)),
+    #("isAdmin", json.bool(data.is_admin)),
+    #("karma", json.int(data.karma)),
+  ])
+}

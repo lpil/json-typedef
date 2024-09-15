@@ -9,6 +9,22 @@ pub fn main() {
   gleeunit.main()
 }
 
+pub fn readme_example_test() {
+  let json =
+    "{
+  \"properties\": {
+    \"id\": { \"type\": \"string\" },
+    \"createdAt\": { \"type\": \"timestamp\" },
+    \"karma\": { \"type\": \"int32\" },
+    \"isAdmin\": { \"type\": \"boolean\" }
+  }
+}"
+  let assert Ok(schema) = json.decode(json, json_typedef.decoder)
+  schema
+  |> to_encoder_and_decoder
+  |> birdie.snap("readme_example_test")
+}
+
 fn test_decode(json: String) -> String {
   let result = json.decode(json, json_typedef.decoder)
   json <> "\n\n" <> pprint.format(result)
