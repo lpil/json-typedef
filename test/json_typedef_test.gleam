@@ -1101,3 +1101,65 @@ pub fn codegen_ref_properties_properties_nullable_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_ref_properties_properties_nullable_test")
 }
+
+pub fn codegen_duplicate_properties_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("a", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("b", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("a", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_duplicate_properties_test")
+}
+
+pub fn codegen_duplicate_optional_properties_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [],
+        [
+          #("b", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("c", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("c", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_duplicate_optional_properties_test")
+}
+
+pub fn codegen_duplicate_mixed_properties_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("b", json_typedef.Type(False, [], json_typedef.Uint8)),
+          #("c", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        [#("c", json_typedef.Type(False, [], json_typedef.Uint8))],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_duplicate_mixed_properties_test")
+}

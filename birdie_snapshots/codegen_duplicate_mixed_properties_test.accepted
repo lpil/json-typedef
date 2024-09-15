@@ -1,0 +1,25 @@
+---
+version: 1.2.1
+title: codegen_duplicate_mixed_properties_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_duplicate_mixed_properties_test
+---
+RootSchema(
+  [],
+  Properties(
+    False,
+    [],
+    PropertiesSchema(
+      [
+        #("b", Type(False, [], Uint8)),
+        #("c", Type(False, [], Uint8)),
+      ],
+      [#("c", Type(False, [], Uint8))],
+      False,
+    ),
+  ),
+)
+
+-----------------------------------------------------------
+
+ERROR: DuplicatePropertyError("Data", "c")
