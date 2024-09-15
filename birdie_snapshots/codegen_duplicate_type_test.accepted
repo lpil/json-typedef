@@ -1,30 +1,13 @@
 ---
 version: 1.2.1
-title: codegen_duplicate_constructor_test
+title: codegen_duplicate_type_test
 file: ./test/json_typedef_test.gleam
-test_name: codegen_duplicate_constructor_test
+test_name: codegen_duplicate_type_test
 ---
 RootSchema(
   [
     #(
-      "OtherFirst",
-      Properties(
-        False,
-        [],
-        PropertiesSchema(
-          [
-            #(
-              "b",
-              Type(False, [], Uint8),
-            ),
-          ],
-          [],
-          False,
-        ),
-      ),
-    ),
-    #(
-      "Other",
+      "Data",
       Discriminator(
         False,
         [],
@@ -60,4 +43,4 @@ RootSchema(
 
 -----------------------------------------------------------
 
-ERROR: DuplicateConstructorError("OtherFirst")
+ERROR: DuplicateTypeError("Data")
