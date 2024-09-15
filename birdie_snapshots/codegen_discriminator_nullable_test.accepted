@@ -64,7 +64,7 @@ pub type Dataup {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(Data) {
+pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
   todo
 }
 

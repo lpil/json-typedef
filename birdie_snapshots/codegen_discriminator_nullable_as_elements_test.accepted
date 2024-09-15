@@ -68,7 +68,7 @@ pub type DataElementup {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(List(Data)) {
+pub fn data_decoder() -> decode.Decoder(List(option.Option(Data))) {
   decode.list(todo)
 }
 
