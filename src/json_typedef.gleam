@@ -796,9 +796,12 @@ fn gen_add_function(
   name: String,
   body: String,
 ) -> Result(Generator, CodegenError) {
-  // TODO: ensure function does not already exist
+  let before = dict.size(gen.functions)
   let functions = dict.insert(gen.functions, name, body)
-  Ok(Generator(..gen, functions:))
+  case dict.size(functions) == before {
+    False -> Ok(Generator(..gen, functions:))
+    True -> Error(DuplicateFunctionError(name))
+  }
 }
 
 fn gen_add_type(
