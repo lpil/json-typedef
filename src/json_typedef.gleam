@@ -824,12 +824,32 @@ fn de_discriminator(
   nullable: Bool,
   name: String,
 ) -> Result(Out, CodegenError) {
+  use mapping <- result.try(
+    list.try_map(mapping, fn(pair) {
+      let result =
+        de_properties_schema(pair.1, False, name <> justin.pascal_case(pair.0))
+      use out <- result.map(result)
+      #(pair.0, out.src)
+    }),
+  )
+
+  let clauses =
+    list.map(mapping, fn(pair) { "    \"" <> pair.0 <> "\" -> " <> pair.1 })
+
+  let src = "decode.at([\"" <> tag <> "\"], decode.string)
+  |> decode.then(fn(tag) {
+    case tag {
+" <> string.join(clauses, "\n") <> "
+      _ -> decode.fail(\"" <> name <> "\")
+    }
+  })"
+
   let type_name = case nullable {
     False -> name
     True -> "option.Option(" <> name <> ")"
   }
 
-  Ok(Out(src: "todo", type_name:))
+  Ok(Out(src:, type_name:))
 }
 
 type PropertyDataName {
