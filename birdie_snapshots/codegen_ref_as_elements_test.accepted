@@ -1,0 +1,27 @@
+---
+version: 1.2.1
+title: codegen_ref_as_elements_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_as_elements_test
+---
+RootSchema(
+  [#("thing", Type(False, [], Boolean))],
+  Elements(
+    False,
+    [],
+    Ref(False, [], "thing"),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub fn data_decoder() -> decode.Decoder(List(Thing)) {
+  decode.list(thing_decoder())
+}
+
+pub fn data_to_json(data: List(Thing)) -> json.Json {
+  json.array(data, thing_to_json)
+}

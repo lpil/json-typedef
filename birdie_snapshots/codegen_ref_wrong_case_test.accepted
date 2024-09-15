@@ -1,0 +1,28 @@
+---
+version: 1.2.1
+title: codegen_ref_wrong_case_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_wrong_case_test
+---
+RootSchema(
+  [
+    #(
+      "YeeHaw",
+      Type(False, [], Boolean),
+    ),
+  ],
+  Ref(False, [], "YeeHaw"),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub fn data_decoder() -> decode.Decoder(YeeHaw) {
+  yee_haw_decoder()
+}
+
+pub fn data_to_json(data: YeeHaw) -> json.Json {
+  yee_haw_to_json(data)
+}

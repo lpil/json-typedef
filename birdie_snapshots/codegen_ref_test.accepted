@@ -1,0 +1,28 @@
+---
+version: 1.2.1
+title: codegen_ref_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_test
+---
+RootSchema(
+  [
+    #(
+      "wibble",
+      Type(False, [], Boolean),
+    ),
+  ],
+  Ref(False, [], "wibble"),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+
+pub fn data_decoder() -> decode.Decoder(Wibble) {
+  wibble_decoder()
+}
+
+pub fn data_to_json(data: Wibble) -> json.Json {
+  wibble_to_json(data)
+}

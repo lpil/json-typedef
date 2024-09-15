@@ -1,0 +1,29 @@
+---
+version: 1.2.1
+title: codegen_ref_nullable_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_nullable_test
+---
+RootSchema(
+  [
+    #(
+      "wobble",
+      Type(False, [], Boolean),
+    ),
+  ],
+  Ref(True, [], "wobble"),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub fn data_decoder() -> decode.Decoder(option.Option(Wobble)) {
+  decode.optional(wobble_decoder())
+}
+
+pub fn data_to_json(data: option.Option(Wobble)) -> json.Json {
+  json.nullable(data, wobble_to_json)
+}

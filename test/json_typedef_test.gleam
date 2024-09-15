@@ -952,3 +952,48 @@ pub fn codegen_discriminator_nullable_as_elements_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_discriminator_nullable_as_elements_test")
 }
+
+pub fn codegen_ref_test() {
+  RootSchema(
+    [#("wibble", Type(False, [], json_typedef.Boolean))],
+    json_typedef.Ref(False, [], "wibble"),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_test")
+}
+
+pub fn codegen_ref_nullable_test() {
+  RootSchema(
+    [#("wobble", Type(False, [], json_typedef.Boolean))],
+    json_typedef.Ref(True, [], "wobble"),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_nullable_test")
+}
+
+pub fn codegen_ref_as_elements_test() {
+  RootSchema(
+    [#("thing", Type(False, [], json_typedef.Boolean))],
+    json_typedef.Elements(False, [], json_typedef.Ref(False, [], "thing")),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_as_elements_test")
+}
+
+pub fn codegen_ref_as_elements_nullable_test() {
+  RootSchema(
+    [#("bibble", Type(False, [], json_typedef.Boolean))],
+    json_typedef.Elements(False, [], json_typedef.Ref(True, [], "bibble")),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_as_elements_nullable_test")
+}
+
+pub fn codegen_ref_wrong_case_test() {
+  RootSchema(
+    [#("YeeHaw", Type(False, [], json_typedef.Boolean))],
+    json_typedef.Ref(False, [], "YeeHaw"),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_ref_wrong_case_test")
+}
