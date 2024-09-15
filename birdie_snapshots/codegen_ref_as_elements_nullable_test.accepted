@@ -1,0 +1,33 @@
+---
+version: 1.2.1
+title: codegen_ref_as_elements_nullable_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_ref_as_elements_nullable_test
+---
+RootSchema(
+  [
+    #(
+      "bibble",
+      Type(False, [], Boolean),
+    ),
+  ],
+  Elements(
+    False,
+    [],
+    Ref(True, [], "bibble"),
+  ),
+)
+
+-----------------------------------------------------------
+
+import decode
+import gleam/json
+import gleam/option
+
+pub fn data_decoder() -> decode.Decoder(List(option.Option(Bibble))) {
+  decode.list(decode.optional(bibble_decoder()))
+}
+
+pub fn data_to_json(data: List(option.Option(Bibble))) -> json.Json {
+  json.array(data, json.nullable(_, bibble_to_json))
+}

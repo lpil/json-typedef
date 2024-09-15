@@ -648,6 +648,7 @@ fn type_variant(
     })
     |> string.join(",\n")
 
+  // TODO: ensure constructor name isn't taken
   let src = "  " <> name <> "(
 " <> properties <> ",
   )"
@@ -819,11 +820,49 @@ fn en_schema(
       en_enum(variants, nullable, data, name)
     Properties(nullable:, schema:, metadata: _) ->
       en_properties_schema(schema, nullable, pro_data_name(data), name, None)
-    Ref(_, _, _) -> todo
+    Ref(nullable:, metadata: _, name:) -> en_ref(name, data, nullable)
     Type(type_:, nullable:, metadata: _) -> Ok(en_type(type_, nullable, data))
     Values(schema:, nullable:, metadata: _) ->
       en_values(schema, nullable, data, name)
   }
+}
+
+fn en_ref(
+  name: String,
+  data: Option(String),
+  nullable: Bool,
+) -> Result(Out, CodegenError) {
+  let src = justin.snake_case(name) <> "_to_json"
+  let src = case data, nullable {
+    None, False -> src
+    None, True -> "json.nullable(_, " <> src <> ")"
+    Some(data), False -> src <> "(" <> data <> ")"
+    Some(data), True -> "json.nullable(" <> data <> ", " <> src <> ")"
+  }
+
+  let type_name = justin.pascal_case(name)
+  let type_name = case nullable {
+    False -> type_name
+    True -> "option.Option(" <> type_name <> ")"
+  }
+
+  Ok(Out(src:, type_name:))
+}
+
+fn de_ref(name: String, nullable: Bool) -> Result(Out, CodegenError) {
+  let src = justin.snake_case(name) <> "_decoder()"
+  let src = case nullable {
+    False -> src
+    True -> "decode.optional(" <> src <> ")"
+  }
+
+  let type_name = justin.pascal_case(name)
+  let type_name = case nullable {
+    False -> type_name
+    True -> "option.Option(" <> type_name <> ")"
+  }
+
+  Ok(Out(src:, type_name:))
 }
 
 fn pro_data_name(name: Option(String)) -> PropertyDataName {
@@ -843,7 +882,7 @@ fn de_schema(schema: Schema, name: String) -> Result(Out, CodegenError) {
     Enum(nullable:, variants:, metadata: _) -> de_enum(variants, nullable, name)
     Properties(nullable:, schema:, metadata: _) ->
       de_properties_schema(schema, nullable, name)
-    Ref(_, _, _) -> todo
+    Ref(nullable:, metadata: _, name:) -> de_ref(name, nullable)
     Type(type_:, nullable:, metadata: _) -> Ok(de_type(type_, nullable))
     Values(schema:, nullable:, metadata: _) -> de_values(schema, nullable, name)
   }
