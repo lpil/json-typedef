@@ -1217,7 +1217,7 @@ pub fn codegen_duplicate_constructor_test() {
   RootSchema(
     [
       #(
-        "data",
+        "OtherFirst",
         json_typedef.Properties(
           False,
           [],
@@ -1227,6 +1227,19 @@ pub fn codegen_duplicate_constructor_test() {
             False,
           ),
         ),
+      ),
+      #(
+        "Other",
+        json_typedef.Discriminator(False, [], "id", [
+          #(
+            "First",
+            json_typedef.PropertiesSchema(
+              [#("b", json_typedef.Type(False, [], json_typedef.Uint8))],
+              [],
+              False,
+            ),
+          ),
+        ]),
       ),
     ],
     json_typedef.Properties(
@@ -1241,4 +1254,35 @@ pub fn codegen_duplicate_constructor_test() {
   )
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_duplicate_constructor_test")
+}
+
+pub fn codegen_duplicate_type_test() {
+  RootSchema(
+    [
+      #(
+        "Data",
+        json_typedef.Discriminator(False, [], "id", [
+          #(
+            "First",
+            json_typedef.PropertiesSchema(
+              [#("b", json_typedef.Type(False, [], json_typedef.Uint8))],
+              [],
+              False,
+            ),
+          ),
+        ]),
+      ),
+    ],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [#("b", json_typedef.Type(False, [], json_typedef.Uint8))],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_duplicate_type_test")
 }

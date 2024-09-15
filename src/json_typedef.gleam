@@ -499,6 +499,8 @@ pub type CodegenError {
     property_name: String,
   )
   DuplicateConstructorError(name: String)
+  DuplicateTypeError(name: String)
+  DuplicateFunctionError(name: String)
 }
 
 pub fn generate(
@@ -804,9 +806,12 @@ fn gen_add_type(
   name: String,
   body: String,
 ) -> Result(Generator, CodegenError) {
-  // TODO: ensure type does not already exist
+  let before = dict.size(gen.types)
   let types = dict.insert(gen.types, name, body)
-  Ok(Generator(..gen, types:))
+  case dict.size(types) == before {
+    False -> Ok(Generator(..gen, types:))
+    True -> Error(DuplicateTypeError(name))
+  }
 }
 
 fn gen_to_string(gen: Generator) -> String {
