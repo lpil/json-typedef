@@ -1,0 +1,54 @@
+---
+version: 1.2.1
+title: codegen_duplicate_discriminator_properties_test
+file: ./test/json_typedef_test.gleam
+test_name: codegen_duplicate_discriminator_properties_test
+---
+RootSchema(
+  [],
+  Discriminator(
+    False,
+    [],
+    "id",
+    [
+      #(
+        "a",
+        PropertiesSchema(
+          [
+            #(
+              "b",
+              Type(False, [], Uint8),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "b",
+        PropertiesSchema(
+          [
+            #(
+              "b",
+              Type(False, [], Uint8),
+            ),
+            #(
+              "id",
+              Type(False, [], Uint8),
+            ),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ],
+  ),
+)
+
+-----------------------------------------------------------
+
+ERROR: DuplicatePropertyError(
+  "Data",
+  "DataB",
+  "id",
+)
