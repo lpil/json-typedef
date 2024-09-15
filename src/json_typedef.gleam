@@ -824,7 +824,12 @@ fn de_discriminator(
   nullable: Bool,
   name: String,
 ) -> Result(Out, CodegenError) {
-  Ok(Out(src: "todo", type_name: name))
+  let type_name = case nullable {
+    False -> name
+    True -> "option.Option(" <> name <> ")"
+  }
+
+  Ok(Out(src: "todo", type_name:))
 }
 
 type PropertyDataName {
