@@ -39,7 +39,7 @@ pub type DataElement {
 }
 
 pub fn data_decoder() -> decode.Decoder(List(option.Option(Data))) {
-  decode.list(decode.nullable(deocode.into({
+  decode.list(decode.nullable(decode.into({
     use count <- decode.parameter
     Data(count:)
   })

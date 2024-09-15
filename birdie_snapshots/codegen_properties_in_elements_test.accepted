@@ -38,7 +38,7 @@ pub type DataElement {
 }
 
 pub fn data_decoder() -> decode.Decoder(List(Data)) {
-  decode.list(deocode.into({
+  decode.list(decode.into({
     use count <- decode.parameter
     Data(count:)
   })
