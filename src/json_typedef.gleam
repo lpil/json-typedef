@@ -494,7 +494,11 @@ type Out {
 pub type CodegenError {
   CannotConvertEmptyToJsonError
   EmptyEnumError
-  DuplicatePropertyError(type_name: String, property: String)
+  DuplicatePropertyError(
+    type_name: String,
+    constructor_name: String,
+    property_name: String,
+  )
 }
 
 pub fn generate(
@@ -578,9 +582,9 @@ fn gen_type(
       gen_type(gen, name <> "Value", schema)
     }
 
-    Discriminator(nullable:, metadata: _, tag: _, mapping:) -> {
+    Discriminator(nullable:, metadata: _, tag:, mapping:) -> {
       let gen = gen_register_nullable(gen, nullable)
-      gen_register_discriminator(gen, name, mapping)
+      gen_register_discriminator(gen, tag, name, mapping)
     }
   }
 }
@@ -607,12 +611,17 @@ fn type_name(schema: Schema, name: String) -> String {
 
 fn gen_register_discriminator(
   gen: Generator,
+  tag: String,
   name: String,
   mapping: List(#(String, PropertiesSchema)),
 ) -> Result(Generator, CodegenError) {
+  let type_name = name
   use #(gen, src) <- result.try(
     list.try_fold(mapping, #(gen, []), fn(pair, mapping) {
       let name = name <> justin.pascal_case(mapping.0)
+      let result =
+        ensure_no_duplicate_properties(mapping.1, Some(tag), type_name, name)
+      use _ <- result.try(result)
       let result = type_variant(pair.0, name, mapping.1)
       use #(gen, src) <- result.map(result)
       #(gen, [src, ..pair.1])
@@ -631,6 +640,8 @@ fn gen_register_properties(
   name: String,
   schema: PropertiesSchema,
 ) -> Result(Generator, CodegenError) {
+  use _ <- result.try(ensure_no_duplicate_properties(schema, None, name, name))
+
   use #(gen, src) <- result.try(type_variant(gen, name, schema))
 
   let src = "pub type " <> name <> " {
@@ -642,13 +653,14 @@ fn gen_register_properties(
 
 fn ensure_no_duplicate_properties(
   schema: PropertiesSchema,
-  extra: Option(#(String, _)),
+  extra: Option(String),
   type_name: String,
+  constructor_name: String,
 ) -> Result(Nil, CodegenError) {
   let names = list.append(schema.properties, schema.optional_properties)
   let recorded = case extra {
     None -> set.new()
-    Some(#(k, _)) -> set.from_list([k])
+    Some(k) -> set.from_list([k])
   }
 
   list.try_fold(names, recorded, fn(recorded, pair) {
@@ -657,7 +669,8 @@ fn ensure_no_duplicate_properties(
     let recorded = set.insert(recorded, field_name)
     case before == set.size(recorded) {
       False -> Ok(recorded)
-      True -> Error(DuplicatePropertyError(type_name, field_name))
+      True ->
+        Error(DuplicatePropertyError(type_name, constructor_name, field_name))
     }
   })
   |> result.replace(Nil)
@@ -668,8 +681,6 @@ fn type_variant(
   name: String,
   schema: PropertiesSchema,
 ) -> Result(#(Generator, String), CodegenError) {
-  use _ <- result.try(ensure_no_duplicate_properties(schema, None, name))
-
   let gen = case schema.optional_properties {
     [] -> gen
     _ -> Generator(..gen, optional_properties_used: True)

@@ -1163,3 +1163,32 @@ pub fn codegen_duplicate_mixed_properties_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_duplicate_mixed_properties_test")
 }
+
+pub fn codegen_duplicate_discriminator_properties_test() {
+  RootSchema(
+    [],
+    json_typedef.Discriminator(False, [], "id", [
+      #(
+        "a",
+        json_typedef.PropertiesSchema(
+          [#("b", json_typedef.Type(False, [], json_typedef.Uint8))],
+          [],
+          False,
+        ),
+      ),
+      #(
+        "b",
+        json_typedef.PropertiesSchema(
+          [
+            #("b", json_typedef.Type(False, [], json_typedef.Uint8)),
+            #("id", json_typedef.Type(False, [], json_typedef.Uint8)),
+          ],
+          [],
+          False,
+        ),
+      ),
+    ]),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_duplicate_discriminator_properties_test")
+}

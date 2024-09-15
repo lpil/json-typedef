@@ -22,4 +22,8 @@ RootSchema(
 
 -----------------------------------------------------------
 
-ERROR: DuplicatePropertyError("Data", "c")
+ERROR: DuplicatePropertyError(
+  "Data",
+  "Data",
+  "c",
+)
