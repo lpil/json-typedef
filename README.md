@@ -42,7 +42,7 @@ pub type Data {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  deocode.into({
+  decode.into({
     use created_at <- decode.parameter
     use id <- decode.parameter
     use is_admin <- decode.parameter
