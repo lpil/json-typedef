@@ -51,8 +51,8 @@ pub type Data {
   )
 }
 
-pub type wibble {
-  wibble(
+pub type Wibble {
+  Wibble(
     count: Int,
   )
 }

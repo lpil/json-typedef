@@ -1212,3 +1212,33 @@ pub fn codegen_duplicate_discriminator_properties_case_test() {
   |> to_encoder_and_decoder
   |> birdie.snap("codegen_duplicate_discriminator_properties_case_test")
 }
+
+pub fn codegen_duplicate_constructor_test() {
+  RootSchema(
+    [
+      #(
+        "data",
+        json_typedef.Properties(
+          False,
+          [],
+          json_typedef.PropertiesSchema(
+            [#("b", json_typedef.Type(False, [], json_typedef.Uint8))],
+            [],
+            False,
+          ),
+        ),
+      ),
+    ],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [#("b", json_typedef.Type(False, [], json_typedef.Uint8))],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_duplicate_constructor_test")
+}

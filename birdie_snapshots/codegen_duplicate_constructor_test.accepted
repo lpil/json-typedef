@@ -1,20 +1,20 @@
 ---
 version: 1.2.1
-title: codegen_ref_properties_test
+title: codegen_duplicate_constructor_test
 file: ./test/json_typedef_test.gleam
-test_name: codegen_ref_properties_test
+test_name: codegen_duplicate_constructor_test
 ---
 RootSchema(
   [
     #(
-      "wibble",
+      "data",
       Properties(
         False,
         [],
         PropertiesSchema(
           [
             #(
-              "count",
+              "b",
               Type(False, [], Uint8),
             ),
           ],
@@ -24,24 +24,17 @@ RootSchema(
       ),
     ),
   ],
-  Ref(False, [], "wibble"),
+  Properties(
+    False,
+    [],
+    PropertiesSchema(
+      [#("b", Type(False, [], Uint8))],
+      [],
+      False,
+    ),
+  ),
 )
 
 -----------------------------------------------------------
 
-import decode
-import gleam/json
-
-pub type Wibble {
-  Wibble(
-    count: Int,
-  )
-}
-
-pub fn data_decoder() -> decode.Decoder(Wibble) {
-  wibble_decoder()
-}
-
-pub fn data_to_json(data: Wibble) -> json.Json {
-  wibble_to_json(data)
-}
+ERROR: DuplicateConstructorError("Data")
