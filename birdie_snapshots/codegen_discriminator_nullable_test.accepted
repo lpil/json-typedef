@@ -85,11 +85,11 @@ pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
 pub fn data_to_json(data: option.Option(Data)) -> json.Json {
   case data {
     option.Some(data) -> case data {
-    Up(height:) -> json.object([
+    DataUp(height:) -> json.object([
     #("kind", json.string("up")),
     #("height", json.int(height)),
   ])
-    Down(depth:, note:) -> json.object([
+    DataDown(depth:, note:) -> json.object([
     #("kind", json.string("down")),
     #("depth", json.float(depth)),
     #("note", json.nullable(note, json.string)),

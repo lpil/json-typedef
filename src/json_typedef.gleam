@@ -1049,7 +1049,7 @@ fn en_discriminator(
 
   let clauses =
     list.map(properties, fn(pair) {
-      let name = justin.pascal_case(pair.0)
+      let name = name <> justin.pascal_case(pair.0)
       let args = case pair.2 {
         [] -> ""
         a -> "(" <> string.join(a, ":, ") <> ":)"
