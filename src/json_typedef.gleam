@@ -697,14 +697,14 @@ fn type_variant(
 
   use gen <- result.try(
     list.try_fold(properties, gen, fn(gen, prop) {
-      gen_type(gen, name <> prop.0, prop.1)
+      gen_type(gen, name <> justin.pascal_case(prop.0), prop.1)
     }),
   )
 
   use gen <- result.try(
     list.try_fold(optional_properties, gen, fn(gen, prop) {
       let gen = Generator(..gen, option_used: True)
-      gen_type(gen, name <> prop.0, prop.1)
+      gen_type(gen, name <> justin.pascal_case(prop.0), prop.1)
     }),
   )
 
@@ -1028,7 +1028,7 @@ fn en_discriminator(
 ) -> Result(Out, CodegenError) {
   use properties <- result.try(
     list.try_map(mapping, fn(pair) {
-      let name = name <> justin.pascal_case(name)
+      let name = name <> justin.pascal_case(pair.0)
       let result =
         en_properties_schema(
           pair.1,
