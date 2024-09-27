@@ -59,8 +59,8 @@ pub type Data {
   )
 }
 
-pub type Datavalues {
-  Datavalues(
+pub type DataValues {
+  DataValues(
     amount: Int,
     key: String,
   )
