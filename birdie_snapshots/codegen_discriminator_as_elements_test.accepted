@@ -65,34 +65,34 @@ pub type DataElement {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(List(Data)) {
+pub fn data_decoder() -> decode.Decoder(List(DataElement)) {
   decode.list(decode.at(["kind"], decode.string)
   |> decode.then(fn(tag) {
     case tag {
     "up" -> decode.into({
     use height <- decode.parameter
-    DataUp(height:)
+    DataElementUp(height:)
   })
   |> decode.field("height", decode.int)
     "down" -> decode.into({
     use depth <- decode.parameter
     use note <- decode.parameter
-    DataDown(depth:, note:)
+    DataElementDown(depth:, note:)
   })
   |> decode.field("depth", decode.float)
   |> decode.field("note", decode.nullable(decode.string))
-      _ -> decode.fail("Data")
+      _ -> decode.fail("DataElement")
     }
   }))
 }
 
-pub fn data_to_json(data: List(Data)) -> json.Json {
+pub fn data_to_json(data: List(DataElement)) -> json.Json {
   json.array(data, fn(data) { case data {
-    DataUp(height:) -> json.object([
+    DataElementUp(height:) -> json.object([
     #("kind", json.string("up")),
     #("height", json.int(height)),
   ])
-    DataDown(depth:, note:) -> json.object([
+    DataElementDown(depth:, note:) -> json.object([
     #("kind", json.string("down")),
     #("depth", json.float(depth)),
     #("note", json.nullable(note, json.string)),

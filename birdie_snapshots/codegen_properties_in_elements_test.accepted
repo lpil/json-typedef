@@ -37,15 +37,15 @@ pub type DataElement {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(List(Data)) {
+pub fn data_decoder() -> decode.Decoder(List(DataElement)) {
   decode.list(decode.into({
     use count <- decode.parameter
-    Data(count:)
+    DataElement(count:)
   })
   |> decode.field("count", decode.int))
 }
 
-pub fn data_to_json(data: List(Data)) -> json.Json {
+pub fn data_to_json(data: List(DataElement)) -> json.Json {
   json.array(data, fn(data) { json.object([
     #("count", json.int(data.count)),
   ]) })
