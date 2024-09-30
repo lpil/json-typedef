@@ -30,19 +30,19 @@ pub type DataElement {
   Right
 }
 
-pub fn data_decoder() -> decode.Decoder(List(option.Option(Data))) {
+pub fn data_decoder() -> decode.Decoder(List(option.Option(DataElement))) {
   decode.list(decode.nullable(decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
       "DOWN" -> decode.into(Down)
       "LEFT" -> decode.into(Left)
       "RIGHT" -> decode.into(Right)
-      _ -> decode.fail(Data)
+      _ -> decode.fail(DataElement)
     }
   })))
 }
 
-pub fn data_to_json(data: List(option.Option(Data))) -> json.Json {
+pub fn data_to_json(data: List(option.Option(DataElement))) -> json.Json {
   json.array(data, json.nullable(_, fn(data) { json.string(case data {
     Up -> "UP"
     Down -> "DOWN"

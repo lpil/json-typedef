@@ -30,19 +30,19 @@ pub type DirectionElement {
   Right
 }
 
-pub fn direction_decoder() -> decode.Decoder(List(option.Option(Direction))) {
+pub fn direction_decoder() -> decode.Decoder(List(option.Option(DirectionElement))) {
   decode.list(decode.nullable(decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
       "DOWN" -> decode.into(Down)
       "LEFT" -> decode.into(Left)
       "RIGHT" -> decode.into(Right)
-      _ -> decode.fail(Direction)
+      _ -> decode.fail(DirectionElement)
     }
   })))
 }
 
-pub fn direction_to_json(data: List(option.Option(Direction))) -> json.Json {
+pub fn direction_to_json(data: List(option.Option(DirectionElement))) -> json.Json {
   json.array(data, json.nullable(_, fn(data) { json.string(case data {
     Up -> "UP"
     Down -> "DOWN"

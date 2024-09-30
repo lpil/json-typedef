@@ -38,15 +38,15 @@ pub type DataElement {
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(List(option.Option(Data))) {
+pub fn data_decoder() -> decode.Decoder(List(option.Option(DataElement))) {
   decode.list(decode.nullable(decode.into({
     use count <- decode.parameter
-    Data(count:)
+    DataElement(count:)
   })
   |> decode.field("count", decode.int)))
 }
 
-pub fn data_to_json(data: List(option.Option(Data))) -> json.Json {
+pub fn data_to_json(data: List(option.Option(DataElement))) -> json.Json {
   json.array(data, fn(data) { case data {
     option.Some(data) -> json.object([
     #("count", json.int(data.count)),

@@ -599,7 +599,8 @@ fn type_name(schema: Schema, name: String) -> String {
     Ref(name:, ..) -> name
 
     Values(schema:, ..) -> "dict.Dict(" <> type_name(schema, name) <> ")"
-    Elements(schema:, ..) -> "List(" <> type_name(schema, name) <> ")"
+    Elements(schema:, ..) ->
+      "List(" <> type_name(schema, name <> "Element") <> ")"
     Empty -> "dynamic.Dynamic"
 
     Type(type_:, ..) ->
@@ -905,7 +906,7 @@ fn en_schema(
     Discriminator(nullable:, metadata: _, mapping:, tag:) ->
       en_discriminator(mapping, tag, nullable, data, name)
     Elements(schema:, nullable:, metadata: _) ->
-      en_elements(schema, nullable, data, name)
+      en_elements(schema, nullable, data, name <> "Element")
     Empty -> Error(CannotConvertEmptyToJsonError)
     Enum(nullable:, variants:, metadata: _) ->
       en_enum(variants, nullable, data, name)
@@ -968,7 +969,7 @@ fn de_schema(schema: Schema, name: String) -> Result(Out, CodegenError) {
     Discriminator(nullable:, metadata: _, mapping:, tag:) ->
       de_discriminator(mapping, tag, nullable, name)
     Elements(schema:, nullable:, metadata: _) ->
-      de_elements(schema, nullable, name)
+      de_elements(schema, nullable, name <> "Element")
     Empty -> Ok(Out("decode.dynamic", "dynamic.Dynamic"))
     Enum(nullable:, variants:, metadata: _) -> de_enum(variants, nullable, name)
     Properties(nullable:, schema:, metadata: _) ->

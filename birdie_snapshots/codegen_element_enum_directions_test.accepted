@@ -29,19 +29,19 @@ pub type DataElement {
   Right
 }
 
-pub fn data_decoder() -> decode.Decoder(List(Data)) {
+pub fn data_decoder() -> decode.Decoder(List(DataElement)) {
   decode.list(decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
       "DOWN" -> decode.into(Down)
       "LEFT" -> decode.into(Left)
       "RIGHT" -> decode.into(Right)
-      _ -> decode.fail(Data)
+      _ -> decode.fail(DataElement)
     }
   }))
 }
 
-pub fn data_to_json(data: List(Data)) -> json.Json {
+pub fn data_to_json(data: List(DataElement)) -> json.Json {
   json.array(data, fn(data) { json.string(case data {
     Up -> "UP"
     Down -> "DOWN"
