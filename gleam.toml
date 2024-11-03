@@ -1,5 +1,5 @@
 name = "json_typedef"
-version = "1.0.0"
+version = "1.1.0"
 target = "erlang"
 description = "Work with JSON using a schema! RFC8927"
 licences = ["Apache-2.0"]
