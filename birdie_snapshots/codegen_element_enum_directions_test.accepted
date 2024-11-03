@@ -36,7 +36,7 @@ pub fn data_decoder() -> decode.Decoder(List(DataElement)) {
       "DOWN" -> decode.into(Down)
       "LEFT" -> decode.into(Left)
       "RIGHT" -> decode.into(Right)
-      _ -> decode.fail(DataElement)
+      _ -> decode.fail("DataElement")
     }
   }))
 }

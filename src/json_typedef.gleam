@@ -1322,7 +1322,7 @@ fn de_enum(
       "      \"" <> v <> "\" -> decode.into(" <> justin.pascal_case(v) <> ")\n"
     })
   let src = src <> string.concat(variants)
-  let src = src <> "      _ -> decode.fail(" <> type_name <> ")\n"
+  let src = src <> "      _ -> decode.fail(\"" <> type_name <> "\")\n"
   let src = src <> "    }\n  })"
   Ok(de_nullable(src, type_name, nullable))
 }

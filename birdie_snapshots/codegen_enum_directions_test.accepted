@@ -32,7 +32,7 @@ pub fn data_decoder() -> decode.Decoder(Data) {
       "DOWN" -> decode.into(Down)
       "LEFT" -> decode.into(Left)
       "RIGHT" -> decode.into(Right)
-      _ -> decode.fail(Data)
+      _ -> decode.fail("Data")
     }
   })
 }
