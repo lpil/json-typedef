@@ -51,8 +51,8 @@ pub fn data_decoder() -> decode.Decoder(Data) {
 
 pub fn data_to_json(data: Data) -> json.Json {
   []
-  |> helper__optional_property(data.key, "DataKey"json.string)
-  |> helper__optional_property(data.amount, "DataAmount"json.int)
+  |> helper__optional_property(data.key, "DataKey", json.string)
+  |> helper__optional_property(data.amount, "DataAmount", json.int)
   |> json.object
 }
 
