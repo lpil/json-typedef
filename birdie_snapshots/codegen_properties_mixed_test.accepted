@@ -66,8 +66,8 @@ pub fn data_to_json(data: Data) -> json.Json {
     #("wup", json.string(data.wup)),
     #("key", json.int(data.key)),
   ]
-  |> helper__optional_property(data.what, "DataWhat"json.string)
-  |> helper__optional_property(data.amount, "DataAmount"json.int)
+  |> helper__optional_property(data.what, "DataWhat", json.string)
+  |> helper__optional_property(data.amount, "DataAmount", json.int)
   |> json.object
 }
 

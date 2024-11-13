@@ -1126,7 +1126,13 @@ fn en_properties_schema(
       let n = name <> justin.pascal_case(p.0)
       let d = property_data(p.0)
       use Out(src: s, ..) <- result.map(en_schema(p.1, None, name))
-      "  |> helper__optional_property(" <> d <> ", \"" <> n <> "\"" <> s <> ")"
+      "  |> helper__optional_property("
+      <> d
+      <> ", \""
+      <> n
+      <> "\", "
+      <> s
+      <> ")"
     }),
   )
 
