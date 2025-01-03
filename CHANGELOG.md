@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2 - Unreleased
+
+- Relaxed version constraint to permit `gleam_json` v2.
+
 ## v1.1.1 - 2024-11-19
 
 - Fixed bug in code generation for optional properties.
