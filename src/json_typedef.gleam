@@ -379,9 +379,10 @@ fn push_path(
   result: Result(t, List(dynamic.DecodeError)),
   segment: String,
 ) -> Result(t, List(dynamic.DecodeError)) {
-  result.map_error(result, list.map(_, fn(e) {
-    dynamic.DecodeError(..e, path: [segment, ..e.path])
-  }))
+  result.map_error(
+    result,
+    list.map(_, fn(e) { dynamic.DecodeError(..e, path: [segment, ..e.path]) }),
+  )
 }
 
 fn get_metadata(
