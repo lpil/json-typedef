@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.2 - Unreleased
+## v1.1.2 - 2025-01-08
 
 - Relaxed version constraint to permit `gleam_json` v2.
 
