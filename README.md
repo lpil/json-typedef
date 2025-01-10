@@ -66,9 +66,11 @@ pub fn data_to_json(data: Data) -> json.Json {
 ```
 
 ## Usage
-Everything starts with a string representation of your schema written using the [JSON Type Definition Format](https://jsontypedef.com/docs/jtd-in-5-minutes/)
+
+Everything starts with a string representation of your schema written using the 
+[JSON Type Definition Format](https://jsontypedef.com/docs/jtd-in-5-minutes/)
+
 ```gleam
-// you can also achieve this by using the gleam/json.{string} function if you receive the data from stdin or a file
 let json_schema =
     "{
   \"properties\": {
@@ -79,7 +81,13 @@ let json_schema =
   }
 }"
 ```
-Then you'll need to use the [gleam/json module](https://hexdocs.pm/gleam_json/gleam/json.html)'s [decode function](https://hexdocs.pm/gleam_json/gleam/json.html#decode) to convert your string representation into a usable [RootSchema](https://hexdocs.pm/json_typedef/json_typedef.html#RootSchema) type like this:
+
+Then you'll need to use the
+[gleam/json module](https://hexdocs.pm/gleam_json/gleam/json.html)'s
+[decode function](https://hexdocs.pm/gleam_json/gleam/json.html#decode) to
+convert your string representation into a usable
+[RootSchema](https://hexdocs.pm/json_typedef/json_typedef.html#RootSchema) type
+like this:
 
 ```gleam
 import gleam/json
@@ -88,14 +96,17 @@ import json_typedef
 let assert Ok(root_schema) = json.decode(json_schema, json_typedef.decoder)
 ```
 
-Once you have your `root_schema` you can then generate your encoders and or decoders! That can be achieved like this:
+Once you have your `root_schema` you can then generate your encoders and or
+decoders! That can be achieved like this:
+
 ```gleam
 json_typedef.codegen()
-|> json_typedef.generate_decoders(True) // change to false to EXCLUDE decoders from the output
-|> json_typedef.generate_encoders(True) // change to false to EXCLUDE encoders from the output
-|> json_typedef.generate(root_schema) // returns type Result(String, CodeGenError)
+|> json_typedef.generate_decoders(True)
+|> json_typedef.generate_encoders(True)
+|> json_typedef.generate(root_schema)
 ```
 
-you can then save the `Ok(String)` value to a file and use the generated code to decode and encode any future pieces of json that satisfy your schema.
+you can then save the `Ok(String)` value to a file and use the generated code to
+decode and encode any future pieces of json that satisfy your schema.
 
 Further documentation can be found at <https://hexdocs.pm/json_typedef>.
