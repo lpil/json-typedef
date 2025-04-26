@@ -594,7 +594,17 @@ fn gen_type(
 }
 
 fn type_name(schema: Schema, name: String) -> String {
-  case schema {
+  let nullable = case schema {
+    Empty -> False
+    Discriminator(nullable:, ..)
+    | Elements(nullable:, ..)
+    | Enum(nullable:, ..)
+    | Properties(nullable:, ..)
+    | Ref(nullable:, ..)
+    | Type(nullable:, ..)
+    | Values(nullable:, ..) -> nullable
+  }
+  let name = case schema {
     Enum(..) | Properties(..) | Discriminator(..) -> name
 
     Ref(name:, ..) -> name
@@ -611,6 +621,11 @@ fn type_name(schema: Schema, name: String) -> String {
         Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> "Int"
         String | Timestamp -> "String"
       }
+  }
+
+  case nullable {
+    True -> "option.Option(" <> name <> ")"
+    False -> name
   }
 }
 
@@ -838,7 +853,7 @@ fn gen_to_string(gen: Generator) -> String {
     |> list.flatten
     |> string.join("\n")
 
-  let defs = fn(items) {
+  let defs = fn(items: Dict(String, String)) -> String {
     items
     |> dict.to_list
     |> list.sort(fn(a, b) { string.compare(a.0, b.0) })
@@ -1405,7 +1420,7 @@ fn de_nullable(src: String, type_name: String, nullable: Bool) -> Out {
   case nullable {
     True -> {
       let type_name = "option.Option(" <> type_name <> ")"
-      let src = "decode.nullable(" <> src <> ")"
+      let src = "decode.optional(" <> src <> ")"
       Out(src:, type_name:)
     }
     False -> Out(src:, type_name:)

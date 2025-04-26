@@ -3,6 +3,7 @@
 ## v1.1.3 - tba
 
 - Fixed typo in helper function
+- Fixed issues with nullable types
 
 ## v1.1.2 - 2025-01-08
 

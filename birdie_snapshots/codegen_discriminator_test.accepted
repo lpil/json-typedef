@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_discriminator_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_discriminator_test
@@ -54,7 +54,7 @@ import gleam/option
 pub type Data {
   DataDown(
     depth: Float,
-    note: String,
+    note: option.Option(String),
   )
   DataUp(
     height: Int,
@@ -76,7 +76,7 @@ pub fn data_decoder() -> decode.Decoder(Data) {
     DataDown(depth:, note:)
   })
   |> decode.field("depth", decode.float)
-  |> decode.field("note", decode.nullable(decode.string))
+  |> decode.field("note", decode.optional(decode.string))
       _ -> decode.fail("Data")
     }
   })

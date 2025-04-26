@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_type_elements_float_nullable
 file: ./test/json_typedef_test.gleam
 test_name: codegen_type_elements_float_nullable_test
@@ -20,7 +20,7 @@ import gleam/json
 import gleam/option
 
 pub fn data_decoder() -> decode.Decoder(option.Option(List(Float))) {
-  decode.nullable(decode.list(decode.float))
+  decode.optional(decode.list(decode.float))
 }
 
 pub fn data_to_json(data: option.Option(List(Float))) -> json.Json {

@@ -1,23 +1,20 @@
 ---
 version: 1.2.5
-title: codegen_properties_nullable_test
+title: codegen_properties_nullable_in_type_test
 file: ./test/json_typedef_test.gleam
-test_name: codegen_properties_nullable_test
+test_name: codegen_properties_nullable_in_type_test
 ---
 RootSchema(
   [],
   Properties(
-    True,
+    False,
     [],
     PropertiesSchema(
       [
+        #("key", Type(True, [], String)),
         #(
           "amount",
           Type(False, [], Uint8),
-        ),
-        #(
-          "key",
-          Type(False, [], String),
         ),
       ],
       [],
@@ -35,26 +32,23 @@ import gleam/option
 pub type Data {
   Data(
     amount: Int,
-    key: String,
+    key: option.Option(String),
   )
 }
 
-pub fn data_decoder() -> decode.Decoder(option.Option(Data)) {
-  decode.optional(decode.into({
+pub fn data_decoder() -> decode.Decoder(Data) {
+  decode.into({
     use amount <- decode.parameter
     use key <- decode.parameter
     Data(amount:, key:)
   })
   |> decode.field("amount", decode.int)
-  |> decode.field("key", decode.string))
+  |> decode.field("key", decode.optional(decode.string))
 }
 
-pub fn data_to_json(data: option.Option(Data)) -> json.Json {
-  case data {
-    option.Some(data) -> json.object([
+pub fn data_to_json(data: Data) -> json.Json {
+  json.object([
+    #("key", json.nullable(data.key, json.string)),
     #("amount", json.int(data.amount)),
-    #("key", json.string(data.key)),
   ])
-    option.None -> json.null()
-  }
 }

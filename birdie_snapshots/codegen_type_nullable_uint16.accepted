@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_type_nullable_uint16
 file: ./test/json_typedef_test.gleam
 test_name: codegen_type_nullable_uint16_test
@@ -13,7 +13,7 @@ import gleam/json
 import gleam/option
 
 pub fn data_decoder() -> decode.Decoder(option.Option(Int)) {
-  decode.nullable(decode.int)
+  decode.optional(decode.int)
 }
 
 pub fn data_to_json(data: option.Option(Int)) -> json.Json {

@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_properties_mixed_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_properties_mixed_test
@@ -76,7 +76,7 @@ fn helper__optional_property(
   key: String,
   value: option.Option(a),
   to_json: fn(a) -> json.Json,
-) -> List(#(String, json.Json)), {
+) -> List(#(String, json.Json)) {
   case value {
     option.Some(value) -> [#(key, to_json(value)), ..object]
     option.None -> object

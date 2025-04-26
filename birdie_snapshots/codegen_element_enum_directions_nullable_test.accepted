@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_element_enum_directions_nullable_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_element_enum_directions_nullable_test
@@ -31,7 +31,7 @@ pub type DataElement {
 }
 
 pub fn data_decoder() -> decode.Decoder(List(option.Option(DataElement))) {
-  decode.list(decode.nullable(decode.then(decode.string, fn(s) {
+  decode.list(decode.optional(decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
       "DOWN" -> decode.into(Down)
