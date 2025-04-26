@@ -863,7 +863,7 @@ fn gen_to_string(gen: Generator) -> String {
   key: String,
   value: option.Option(a),
   to_json: fn(a) -> json.Json,
-) -> List(#(String, json.Json)), {
+) -> List(#(String, json.Json)) {
   case value {
     option.Some(value) -> [#(key, to_json(value)), ..object]
     option.None -> object
