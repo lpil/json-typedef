@@ -845,6 +845,26 @@ pub fn codegen_properties_nullable_in_elements_test() {
   |> birdie.snap("codegen_properties_nullable_in_elements_test")
 }
 
+pub fn codegen_properties_nullable_in_type_test() {
+  RootSchema(
+    [],
+    json_typedef.Properties(
+      False,
+      [],
+      json_typedef.PropertiesSchema(
+        [
+          #("key", json_typedef.Type(True, [], json_typedef.String)),
+          #("amount", json_typedef.Type(False, [], json_typedef.Uint8)),
+        ],
+        [],
+        False,
+      ),
+    ),
+  )
+  |> to_encoder_and_decoder
+  |> birdie.snap("codegen_properties_nullable_in_type_test")
+}
+
 pub fn codegen_discriminator_test() {
   RootSchema(
     [],

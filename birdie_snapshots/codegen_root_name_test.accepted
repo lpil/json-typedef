@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_root_name_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_root_name_test
@@ -31,7 +31,7 @@ pub type DirectionElement {
 }
 
 pub fn direction_decoder() -> decode.Decoder(List(option.Option(DirectionElement))) {
-  decode.list(decode.nullable(decode.then(decode.string, fn(s) {
+  decode.list(decode.optional(decode.then(decode.string, fn(s) {
     case s {
       "UP" -> decode.into(Up)
       "DOWN" -> decode.into(Down)

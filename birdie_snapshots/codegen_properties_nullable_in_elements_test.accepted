@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.5
 title: codegen_properties_nullable_in_elements_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_properties_nullable_in_elements_test
@@ -39,7 +39,7 @@ pub type DataElement {
 }
 
 pub fn data_decoder() -> decode.Decoder(List(option.Option(DataElement))) {
-  decode.list(decode.nullable(decode.into({
+  decode.list(decode.optional(decode.into({
     use count <- decode.parameter
     DataElement(count:)
   })
