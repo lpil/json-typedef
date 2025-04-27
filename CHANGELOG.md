@@ -1,9 +1,9 @@
 # Changelog
 
-## v1.1.3 - tba
+## v1.1.3 - 2025-04-27
 
-- Fixed typo in helper function
-- Fixed issues with nullable types
+- Fixed typo in helper function.
+- Fixed issues with nullable types>
 
 ## v1.1.2 - 2025-01-08
 
