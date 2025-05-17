@@ -1,0 +1,13 @@
+---
+version: 1.2.7
+title: decode_type_invalid_test
+---
+{ "type": 1 }
+
+Error(UnableToDecode([
+  DecodeError(
+    "Field",
+    "Nothing",
+    ["properties"],
+  ),
+]))

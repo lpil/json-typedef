@@ -4,7 +4,7 @@
 
 import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/dynamic.{type Dynamic}
+import gleam/dynamic/decode.{type Dynamic}
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -198,222 +198,156 @@ fn discriminator_to_json(
   [#("discriminator", json.string(tag)), #("mapping", json.object(mapping))]
 }
 
-pub fn decoder(data: Dynamic) -> Result(RootSchema, List(dynamic.DecodeError)) {
-  dynamic.decode2(RootSchema, fn(_) { Ok([]) }, decode_schema)(data)
+pub fn decoder() -> decode.Decoder(RootSchema) {
+  use schema <- decode.then(decode_schema())
+  decode.success(RootSchema(definitions: [], schema:))
 }
 
-fn decode_schema(data: Dynamic) -> Result(Schema, List(dynamic.DecodeError)) {
-  use data <- result.try(dynamic.dict(dynamic.string, dynamic.dynamic)(data))
+fn decode_schema() -> decode.Decoder(Schema) {
+  decode.one_of(decode_properties(), [
+    decode_type(),
+    decode_enum(),
+    decode_ref(),
+    decode_values(),
+    decode_elements(),
+    decode_discriminator(),
+    decode_empty(),
+  ])
+}
+
+fn decode_discriminator() -> decode.Decoder(Schema) {
+  use tag <- decode.field("discriminator", decode.string)
+  use mapping <- decode.field(
+    "mapping",
+    decode.dict(decode.string, decode_properties_schema())
+      |> decode.map(dict.to_list),
+  )
+  use nullable <- decode.then(get_nullable())
+  use metadata <- decode.then(get_metadata())
+  decode.success(Discriminator(nullable:, tag:, mapping:, metadata:))
+}
+
+fn decode_properties() -> decode.Decoder(Schema) {
+  use <- decode.recursive
+  use schema <- decode.field("properties", decode_properties_schema())
+  use nullable <- decode.then(get_nullable())
+  use metadata <- decode.then(get_metadata())
+  decode.success(Properties(nullable:, metadata:, schema:))
+}
+
+fn decode_properties_schema() -> decode.Decoder(PropertiesSchema) {
   let decoder =
-    key_decoder(data, "type", decode_type)
-    |> result.lazy_or(fn() { key_decoder(data, "enum", decode_enum) })
-    |> result.lazy_or(fn() { key_decoder(data, "ref", decode_ref) })
-    |> result.lazy_or(fn() { key_decoder(data, "values", decode_values) })
-    |> result.lazy_or(fn() { key_decoder(data, "elements", decode_elements) })
-    |> result.lazy_or(fn() {
-      key_decoder(data, "discriminator", decode_discriminator)
-    })
-    |> result.lazy_or(fn() {
-      key_decoder(data, "properties", decode_properties)
-    })
-    |> result.lazy_or(fn() {
-      key_decoder(data, "extraProperties", decode_properties)
-    })
-    |> result.lazy_or(fn() {
-      key_decoder(data, "additionalProperties", decode_properties)
-    })
-    |> result.unwrap(fn() { decode_empty(data) })
-
-  decoder()
+    decode.dict(decode.string, decode_schema()) |> decode.map(dict.to_list)
+  use properties <- decode.field("properties", decoder)
+  use optional <- decode.optional_field("optionalProperties", [], decoder)
+  use more <- decode.optional_field("additionalProperties", False, decode.bool)
+  decode.success(PropertiesSchema(
+    properties:,
+    optional_properties: optional,
+    additional_properties: more,
+  ))
 }
 
-fn key_decoder(
-  dict: Dict(String, Dynamic),
-  key: String,
-  constructor: fn(Dynamic, Dict(String, Dynamic)) ->
-    Result(t, List(dynamic.DecodeError)),
-) -> Result(fn() -> Result(t, List(dynamic.DecodeError)), Nil) {
-  case dict.get(dict, key) {
-    Ok(value) -> Ok(fn() { constructor(value, dict) })
-    Error(e) -> Error(e)
-  }
+fn decode_type() -> decode.Decoder(Schema) {
+  use type_ <- decode.field("type", decode_type_variant())
+  use nullable <- decode.then(get_nullable())
+  use metadata <- decode.then(get_metadata())
+  decode.success(Type(nullable, metadata, type_))
 }
 
-fn decode_discriminator(
-  tag: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-  use tag <- result.try(dynamic.string(tag) |> push_path("discriminator"))
-  use mapping <- result.try(case dict.get(data, "mapping") {
-    Ok(mapping) -> Ok(mapping)
-    Error(_) -> Error([dynamic.DecodeError("field", "nothing", ["mapping"])])
-  })
-  use properties <- result.try(
-    decode_object_as_list(mapping, decode_properties_schema)
-    |> push_path("mapping"),
-  )
-  Ok(Discriminator(nullable:, tag:, mapping: properties, metadata:))
-}
-
-fn decode_object_as_list(
-  data: Dynamic,
-  inner: dynamic.Decoder(t),
-) -> Result(List(#(String, t)), List(dynamic.DecodeError)) {
-  dynamic.dict(dynamic.string, inner)(data)
-  |> result.map(dict.to_list)
-}
-
-fn decode_properties(
-  _tag: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-  dynamic.from(data)
-  |> decode_properties_schema
-  |> result.map(Properties(nullable, metadata, _))
-}
-
-fn decode_properties_schema(
-  data: Dynamic,
-) -> Result(PropertiesSchema, List(dynamic.DecodeError)) {
-  let field = fn(name, data) {
-    case dynamic.field(name, dynamic.dynamic)(data) {
-      Ok(d) -> decode_object_as_list(d, decode_schema) |> push_path(name)
-      Error(_) -> Ok([])
-    }
-  }
-  dynamic.decode3(
-    PropertiesSchema,
-    field("properties", _),
-    field("optionalProperties", _),
-    fn(d) {
-      case dynamic.field("additionalProperties", dynamic.dynamic)(d) {
-        Ok(d) -> dynamic.bool(d) |> push_path("additionalProperties")
-        Error(_) -> Ok(False)
-      }
-    },
-  )(data)
-}
-
-fn decode_type(
-  type_: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use type_ <- result.try(dynamic.string(type_) |> push_path("type"))
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-
+fn decode_type_variant() -> decode.Decoder(Type) {
+  use type_ <- decode.then(decode.string)
   case type_ {
-    "boolean" -> Ok(Type(nullable, metadata, Boolean))
-    "float32" -> Ok(Type(nullable, metadata, Float32))
-    "float64" -> Ok(Type(nullable, metadata, Float64))
-    "int16" -> Ok(Type(nullable, metadata, Int16))
-    "int32" -> Ok(Type(nullable, metadata, Int32))
-    "int8" -> Ok(Type(nullable, metadata, Int8))
-    "string" -> Ok(Type(nullable, metadata, String))
-    "timestamp" -> Ok(Type(nullable, metadata, Timestamp))
-    "uint16" -> Ok(Type(nullable, metadata, Uint16))
-    "uint32" -> Ok(Type(nullable, metadata, Uint32))
-    "uint8" -> Ok(Type(nullable, metadata, Uint8))
-    _ -> Error([dynamic.DecodeError("Type", "String", ["type"])])
+    "boolean" -> decode.success(Boolean)
+    "float32" -> decode.success(Float32)
+    "float64" -> decode.success(Float64)
+    "int16" -> decode.success(Int16)
+    "int32" -> decode.success(Int32)
+    "int8" -> decode.success(Int8)
+    "string" -> decode.success(String)
+    "timestamp" -> decode.success(Timestamp)
+    "uint16" -> decode.success(Uint16)
+    "uint32" -> decode.success(Uint32)
+    "uint8" -> decode.success(Uint8)
+    _ -> decode.failure(Boolean, "Type")
   }
 }
 
-fn decode_enum(
-  type_: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-  dynamic.list(dynamic.string)(type_)
-  |> push_path("enum")
-  |> result.map(Enum(nullable, metadata, _))
+fn decode_enum() -> decode.Decoder(Schema) {
+  use variants <- decode.field("enum", decode.list(decode.string))
+  use nullable <- decode.then(get_nullable())
+  use metadata <- decode.then(get_metadata())
+  decode.success(Enum(nullable:, metadata:, variants:))
 }
 
-fn decode_ref(
-  type_: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-  dynamic.string(type_)
-  |> push_path("ref")
-  |> result.map(Ref(nullable, metadata, _))
+fn decode_ref() -> decode.Decoder(Schema) {
+  use name <- decode.field("ref", decode.string)
+  use nullable <- decode.then(get_nullable())
+  use metadata <- decode.then(get_metadata())
+  decode.success(Ref(nullable:, metadata:, name:))
 }
 
-fn decode_empty(
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  case dict.size(data) {
-    0 -> Ok(Empty)
-    _ -> Error([dynamic.DecodeError("Schema", "Dict", [])])
+fn decode_empty() -> decode.Decoder(Schema) {
+  use dict <- decode.then(decode.dict(decode.string, decode.dynamic))
+  case dict.size(dict) {
+    0 -> decode.success(Empty)
+    _ -> decode.failure(Empty, "Empty")
   }
 }
 
-fn decode_values(
-  values: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-  decode_schema(values)
-  |> push_path("values")
-  |> result.map(Values(nullable, metadata, _))
-}
-
-fn decode_elements(
-  elements: Dynamic,
-  data: Dict(String, Dynamic),
-) -> Result(Schema, List(dynamic.DecodeError)) {
-  use nullable <- result.try(get_nullable(data))
-  use metadata <- result.try(get_metadata(data))
-  decode_schema(elements)
-  |> push_path("elements")
-  |> result.map(Elements(nullable, metadata, _))
-}
-
-fn push_path(
-  result: Result(t, List(dynamic.DecodeError)),
-  segment: String,
-) -> Result(t, List(dynamic.DecodeError)) {
-  result.map_error(
-    result,
-    list.map(_, fn(e) { dynamic.DecodeError(..e, path: [segment, ..e.path]) }),
+fn decode_values() -> decode.Decoder(Schema) {
+  use <- decode.recursive
+  use schema <- decode.optional_field(
+    "values",
+    None,
+    decode_schema() |> decode.map(Some),
   )
-}
-
-fn get_metadata(
-  data: Dict(String, Dynamic),
-) -> Result(List(#(String, Dynamic)), List(dynamic.DecodeError)) {
-  case dict.get(data, "metadata") {
-    Ok(data) ->
-      dynamic.dict(dynamic.string, dynamic.dynamic)(data)
-      |> result.map(dict.to_list)
-      |> push_path("metadata")
-    Error(_) -> Ok([])
+  case schema {
+    Some(schema) -> {
+      use nullable <- decode.then(get_nullable())
+      use metadata <- decode.then(get_metadata())
+      decode.success(Values(nullable:, metadata:, schema:))
+    }
+    None -> decode.failure(Empty, "Schema")
   }
 }
 
-fn get_nullable(
-  data: Dict(String, Dynamic),
-) -> Result(Bool, List(dynamic.DecodeError)) {
-  case dict.get(data, "nullable") {
-    Ok(data) -> dynamic.bool(data) |> push_path("nullable")
-    Error(_) -> Ok(False)
+fn decode_elements() -> decode.Decoder(Schema) {
+  use <- decode.recursive
+  use <- decode.recursive
+  use schema <- decode.optional_field(
+    "elements",
+    None,
+    decode_schema() |> decode.map(Some),
+  )
+  case schema {
+    Some(schema) -> {
+      use nullable <- decode.then(get_nullable())
+      use metadata <- decode.then(get_metadata())
+      decode.success(Elements(nullable:, metadata:, schema:))
+    }
+    None -> decode.failure(Empty, "Schema")
   }
+}
+
+fn get_metadata() -> decode.Decoder(List(#(String, Dynamic))) {
+  let decoder =
+    decode.dict(decode.string, decode.dynamic)
+    |> decode.map(dict.to_list)
+  decode.optionally_at(["metadata"], [], decoder)
+}
+
+fn get_nullable() -> decode.Decoder(Bool) {
+  decode.optionally_at(["nullable"], False, decode.bool)
 }
 
 fn metadata_value_to_json(data: Dynamic) -> Json {
   let decoder =
-    dynamic.any([
-      fn(a) { dynamic.string(a) |> result.map(json.string) },
-      fn(a) { dynamic.int(a) |> result.map(json.int) },
-      fn(a) { dynamic.float(a) |> result.map(json.float) },
+    decode.one_of(decode.string |> decode.map(json.string), [
+      decode.int |> decode.map(json.int),
+      decode.float |> decode.map(json.float),
     ])
-  case decoder(data) {
+  case decode.run(data, decoder) {
     Ok(data) -> data
     Error(_) -> json.string(string.inspect(data))
   }
