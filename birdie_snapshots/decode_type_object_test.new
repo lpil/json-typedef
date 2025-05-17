@@ -1,0 +1,13 @@
+---
+version: 1.2.7
+title: decode_type_object_test
+---
+{ "type": "object" }
+
+Error(UnableToDecode([
+  DecodeError(
+    "Field",
+    "Nothing",
+    ["properties"],
+  ),
+]))

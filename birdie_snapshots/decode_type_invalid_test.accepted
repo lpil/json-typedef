@@ -1,11 +1,11 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: decode_type_invalid_test
 file: ./test/json_typedef_test.gleam
 test_name: decode_type_invalid_test
 ---
 { "type": 1 }
 
-Error(UnexpectedFormat([
+Error(UnableToDecode([
   DecodeError("String", "Int", ["type"]),
 ]))

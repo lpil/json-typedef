@@ -1,0 +1,19 @@
+---
+version: 1.2.7
+title: decode_properties_additional_test
+---
+{
+    "properties": {
+        "name": { "type": "string" },
+        "isAdmin": { "type": "boolean" }
+    },
+    "additionalProperties": true
+}
+
+Error(UnableToDecode([
+  DecodeError(
+    "Field",
+    "Nothing",
+    ["properties", "properties"],
+  ),
+]))
