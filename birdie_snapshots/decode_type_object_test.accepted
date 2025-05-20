@@ -1,12 +1,12 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: decode_type_object_test
 file: ./test/json_typedef_test.gleam
 test_name: decode_type_unknown_test
 ---
 { "type": "object" }
 
-Error(UnexpectedFormat([
+Error(UnableToDecode([
   DecodeError(
     "Type",
     "String",

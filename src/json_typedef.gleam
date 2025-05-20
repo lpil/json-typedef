@@ -204,12 +204,12 @@ pub fn decoder() -> decode.Decoder(RootSchema) {
 }
 
 fn decode_schema() -> decode.Decoder(Schema) {
-  decode.one_of(decode_properties(), [
-    decode_type(),
+  decode.one_of(decode_type(), [
     decode_enum(),
     decode_ref(),
     decode_values(),
     decode_elements(),
+    decode_properties(),
     decode_discriminator(),
     decode_empty(),
   ])
@@ -229,7 +229,7 @@ fn decode_discriminator() -> decode.Decoder(Schema) {
 
 fn decode_properties() -> decode.Decoder(Schema) {
   use <- decode.recursive
-  use schema <- decode.field("properties", decode_properties_schema())
+  use schema <- decode.then(decode_properties_schema())
   use nullable <- decode.then(get_nullable())
   use metadata <- decode.then(get_metadata())
   decode.success(Properties(nullable:, metadata:, schema:))

@@ -376,7 +376,7 @@ pub fn to_json_type_metadata_test() {
     [],
     Type(
       nullable: False,
-      metadata: [#("documentation", dynamic.from("Hello, Joe!"))],
+      metadata: [#("documentation", dynamic.string("Hello, Joe!"))],
       type_: json_typedef.String,
     ),
   )
