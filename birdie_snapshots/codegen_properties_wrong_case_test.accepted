@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: codegen_properties_wrong_case_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_properties_wrong_case_test
@@ -24,7 +24,7 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 
 pub type Data {
@@ -34,11 +34,8 @@ pub type Data {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  decode.into({
-    use wibble_wobble <- decode.parameter
-    Data(wibble_wobble:)
-  })
-  |> decode.field("wibbleWobble", decode.int)
+  use wibble_wobble <- decode.field("wibbleWobble", decode.int)
+  decode.success(wibble_wobble:)
 }
 
 pub fn data_to_json(data: Data) -> json.Json {

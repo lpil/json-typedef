@@ -422,7 +422,12 @@ pub fn generate_decoders(gen: Generator, x: Bool) -> Generator {
 }
 
 type Out {
-  Out(src: String, type_name: String)
+  Out(src: String, type_name: String, kind: CodeKind)
+}
+
+type CodeKind {
+  Expression
+  Block
 }
 
 pub type CodegenError {
@@ -778,7 +783,7 @@ fn gen_to_string(gen: Generator) -> String {
 
   let imports =
     [
-      imp(gen.generate_decoders, "decode"),
+      imp(gen.generate_decoders, "gleam/dynamic/decode"),
       imp(gen.dict_used, "gleam/dict"),
       imp(gen.dynamic_used, "gleam/dynamic"),
       imp(gen.generate_encoders, "gleam/json"),
@@ -888,7 +893,7 @@ fn en_ref(
     True -> "option.Option(" <> type_name <> ")"
   }
 
-  Ok(Out(src:, type_name:))
+  Ok(Out(src:, type_name:, kind: Expression))
 }
 
 fn de_ref(name: String, nullable: Bool) -> Result(Out, CodegenError) {
@@ -904,7 +909,7 @@ fn de_ref(name: String, nullable: Bool) -> Result(Out, CodegenError) {
     True -> "option.Option(" <> type_name <> ")"
   }
 
-  Ok(Out(src:, type_name:))
+  Ok(Out(src:, type_name:, kind: Expression))
 }
 
 fn pro_data_name(name: Option(String)) -> PropertyDataName {
@@ -920,7 +925,7 @@ fn de_schema(schema: Schema, name: String) -> Result(Out, CodegenError) {
       de_discriminator(mapping, tag, nullable, name)
     Elements(schema:, nullable:, metadata: _) ->
       de_elements(schema, nullable, name <> "Element")
-    Empty -> Ok(Out("decode.dynamic", "dynamic.Dynamic"))
+    Empty -> Ok(Out("decode.dynamic", "dynamic.Dynamic", Expression))
     Enum(nullable:, variants:, metadata: _) -> de_enum(variants, nullable, name)
     Properties(nullable:, schema:, metadata: _) ->
       de_properties_schema(schema, nullable, name)
@@ -941,17 +946,17 @@ fn de_discriminator(
       let result =
         de_properties_schema(pair.1, False, name <> justin.pascal_case(pair.0))
       use out <- result.map(result)
-      #(pair.0, out.src)
+      #(pair.0, wrap_block(out))
     }),
   )
 
   let clauses =
-    list.map(mapping, fn(pair) { "    \"" <> pair.0 <> "\" -> " <> pair.1 })
+    list.map(mapping, fn(pair) { "  \"" <> pair.0 <> "\" -> " <> pair.1 })
 
   let src = "decode.at([\"" <> tag <> "\"], decode.string)
   |> decode.then(fn(tag) {
     case tag {
-" <> string.join(clauses, "\n") <> "
+" <> indent(string.join(clauses, "\n")) <> "
       _ -> decode.fail(\"" <> name <> "\")
     }
   })"
@@ -961,7 +966,7 @@ fn de_discriminator(
     True -> "option.Option(" <> name <> ")"
   }
 
-  Ok(Out(src:, type_name:))
+  Ok(Out(src:, type_name:, kind: Expression))
 }
 
 type PropertyDataName {
@@ -1023,9 +1028,9 @@ fn en_discriminator(
     option.Some(data) -> " <> src <> "
     option.None -> json.null()
   }"
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
-    False -> Out(src:, type_name: name)
+    False -> Out(src:, type_name: name, kind: Expression)
   }
 
   case data {
@@ -1122,7 +1127,7 @@ fn en_properties_schema(
     False -> name
   }
 
-  Out(src:, type_name:)
+  Out(src:, type_name:, kind: Expression)
 }
 
 fn en_values(
@@ -1131,19 +1136,23 @@ fn en_values(
   data: Option(String),
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(en_schema(schema, None, position_name))
+  use Out(src:, type_name:, kind: _) <- result.map(en_schema(
+    schema,
+    None,
+    position_name,
+  ))
   let type_name = "dict.Dict(String, " <> type_name <> ")"
   let data = option.unwrap(data, "_")
   case nullable {
     False -> {
       let src = "helper__dict_to_json(" <> data <> ", " <> src <> ")"
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
     True -> {
       let type_name = "option.Option(" <> type_name <> ")"
       let src = "helper__dict_to_json(_, " <> src <> ")"
       let src = "json.nullable(" <> data <> ", " <> src <> ")"
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
   }
 }
@@ -1176,9 +1185,9 @@ fn en_enum(
         Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
         None -> "json.nullable(_, " <> src <> ")"
       }
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
-    False -> Out(src:, type_name:)
+    False -> Out(src:, type_name:, kind: Expression)
   }
   Ok(out)
 }
@@ -1203,42 +1212,38 @@ fn de_properties_schema(
 
   use properties <- result.try(
     list.try_map(properties, fn(prop) {
-      use s <- result.map(de_schema(prop.1, name <> justin.pascal_case(prop.0)))
-      #(prop.0, s, prop.2)
+      use decoder <- result.map(de_schema(
+        prop.1,
+        name <> justin.pascal_case(prop.0),
+      ))
+      let snaked = justin.snake_case(prop.0)
+      #(prop.0, snaked, decoder, prop.2)
     }),
   )
 
   let params =
     properties
     |> list.map(fn(n) {
-      let name = justin.snake_case(n.0)
-      "    use " <> name <> " <- decode.parameter"
-    })
-    |> string.join("\n")
-
-  let fields =
-    properties
-    |> list.map(fn(p) {
-      let field = case p.2 {
-        True -> "  |> decode.optional_field(\""
-        False -> "  |> decode.field(\""
+      let #(name, snaked, decoder, nullable) = n
+      let field = case nullable {
+        True -> "decode.optional_field(\""
+        False -> "decode.field(\""
       }
-      field <> p.0 <> "\", " <> { p.1 }.src <> ")"
+      "use "
+      <> snaked
+      <> " <- "
+      <> field
+      <> name
+      <> "\", "
+      <> { decoder }.src
+      <> ")"
     })
-    |> string.join("\n")
+    |> string.join("\n  ")
 
-  let keys =
-    properties
-    |> list.map(fn(n) { justin.snake_case(n.0) <> ":" })
-    |> string.join(", ")
-
-  let src = "decode.into({
-" <> params <> "
-    " <> name <> "(" <> keys <> ")
-  })
-" <> fields
-
-  Ok(de_nullable(src, name, nullable))
+  let keys = properties |> list.map(fn(n) { n.1 <> ":" }) |> string.join(", ")
+  let src = params <> "\n  decode.success(" <> keys <> ")"
+  let out = Out(src, name, Block)
+  Ok(de_nullable(out, nullable))
 }
 
 fn en_elements(
@@ -1247,19 +1252,23 @@ fn en_elements(
   data: Option(String),
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(en_schema(schema, None, position_name))
+  use Out(src:, type_name:, kind: _) <- result.map(en_schema(
+    schema,
+    None,
+    position_name,
+  ))
   let type_name = "List(" <> type_name <> ")"
   let data = option.unwrap(data, "_")
   case nullable {
     False -> {
       let src = "json.array(" <> data <> ", " <> src <> ")"
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
     True -> {
       let type_name = "option.Option(" <> type_name <> ")"
       let src = "json.array(_, " <> src <> ")"
       let src = "json.nullable(" <> data <> ", " <> src <> ")"
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
   }
 }
@@ -1280,7 +1289,8 @@ fn de_enum(
   let src = src <> string.concat(variants)
   let src = src <> "      _ -> decode.fail(\"" <> type_name <> "\")\n"
   let src = src <> "    }\n  })"
-  Ok(de_nullable(src, type_name, nullable))
+  let out = Out(src, type_name, Expression)
+  Ok(de_nullable(out, nullable))
 }
 
 fn de_values(
@@ -1288,10 +1298,14 @@ fn de_values(
   nullable: Bool,
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(de_schema(schema, position_name))
+  use Out(src:, type_name:, kind: _) <- result.map(de_schema(
+    schema,
+    position_name,
+  ))
   let type_name = "dict.Dict(String, " <> type_name <> ")"
   let src = "decode.dict(decode.string, " <> src <> ")"
-  de_nullable(src, type_name, nullable)
+  let out = Out(src, type_name, Expression)
+  de_nullable(out, nullable)
 }
 
 fn de_elements(
@@ -1299,10 +1313,11 @@ fn de_elements(
   nullable: Bool,
   position_name: String,
 ) -> Result(Out, CodegenError) {
-  use Out(src:, type_name:) <- result.map(de_schema(schema, position_name))
-  let type_name = "List(" <> type_name <> ")"
-  let src = "decode.list(" <> src <> ")"
-  de_nullable(src, type_name, nullable)
+  use out <- result.map(de_schema(schema, position_name))
+  let type_name = "List(" <> out.type_name <> ")"
+  let src = "decode.list(" <> wrap_block(out) <> ")"
+  let out = Out(src, type_name, Expression)
+  de_nullable(out, nullable)
 }
 
 fn de_type(t: Type, nullable: Bool) -> Out {
@@ -1312,7 +1327,8 @@ fn de_type(t: Type, nullable: Bool) -> Out {
     String | Timestamp -> #("decode.string", "String")
     Int16 | Int32 | Int8 | Uint16 | Uint32 | Uint8 -> #("decode.int", "Int")
   }
-  de_nullable(src, type_name, nullable)
+  let out = Out(src, type_name, Expression)
+  de_nullable(out, nullable)
 }
 
 fn en_type(t: Type, nullable: Bool, data: Option(String)) -> Out {
@@ -1338,25 +1354,38 @@ fn en_nullable(
         Some(data) -> "json.nullable(" <> data <> ", " <> src <> ")"
         None -> "json.nullable(_, " <> src <> ")"
       }
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
     False -> {
       let src = case data {
         Some(data) -> src <> "(" <> data <> ")"
         None -> src
       }
-      Out(src:, type_name:)
+      Out(src:, type_name:, kind: Expression)
     }
   }
 }
 
-fn de_nullable(src: String, type_name: String, nullable: Bool) -> Out {
+fn de_nullable(out: Out, nullable: Bool) -> Out {
   case nullable {
     True -> {
-      let type_name = "option.Option(" <> type_name <> ")"
-      let src = "decode.optional(" <> src <> ")"
-      Out(src:, type_name:)
+      let type_name = "option.Option(" <> out.type_name <> ")"
+      let src = "decode.optional(" <> wrap_block(out) <> ")"
+      Out(src:, type_name:, kind: Expression)
     }
-    False -> Out(src:, type_name:)
+    False -> out
   }
+}
+
+fn wrap_block(out: Out) -> String {
+  case out.kind {
+    Expression -> out.src
+    Block -> {
+      "{\n  " <> indent(out.src) <> "\n  }"
+    }
+  }
+}
+
+fn indent(src: String) -> String {
+  "  " <> string.replace(src, "\n", "\n  ")
 }

@@ -1,5 +1,5 @@
 ---
-version: 1.2.5
+version: 1.2.7
 title: codegen_element_enum_directions_nullable_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_element_enum_directions_nullable_test
@@ -19,7 +19,7 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 import gleam/option
 

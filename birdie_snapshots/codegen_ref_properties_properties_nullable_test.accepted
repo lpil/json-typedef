@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: codegen_ref_properties_properties_nullable_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_ref_properties_properties_nullable_test
@@ -42,7 +42,7 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 
 pub type Data {
@@ -58,11 +58,8 @@ pub type Wibble {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  decode.into({
-    use inner <- decode.parameter
-    Data(inner:)
-  })
-  |> decode.field("inner", wibble_decoder())
+  use inner <- decode.field("inner", wibble_decoder())
+  decode.success(inner:)
 }
 
 pub fn data_to_json(data: Data) -> json.Json {

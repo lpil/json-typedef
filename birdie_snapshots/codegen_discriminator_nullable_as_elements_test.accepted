@@ -1,5 +1,5 @@
 ---
-version: 1.2.5
+version: 1.2.7
 title: codegen_discriminator_nullable_as_elements_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_discriminator_nullable_as_elements_test
@@ -51,7 +51,7 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 import gleam/option
 
@@ -69,18 +69,15 @@ pub fn data_decoder() -> decode.Decoder(List(option.Option(DataElement))) {
   decode.list(decode.at(["kind"], decode.string)
   |> decode.then(fn(tag) {
     case tag {
-    "up" -> decode.into({
-    use height <- decode.parameter
-    DataElementUp(height:)
-  })
-  |> decode.field("height", decode.int)
-    "down" -> decode.into({
-    use depth <- decode.parameter
-    use note <- decode.parameter
-    DataElementDown(depth:, note:)
-  })
-  |> decode.field("depth", decode.float)
-  |> decode.field("note", decode.optional(decode.string))
+    "up" -> {
+      use height <- decode.field("height", decode.int)
+      decode.success(height:)
+    }
+    "down" -> {
+      use depth <- decode.field("depth", decode.float)
+      use note <- decode.field("note", decode.optional(decode.string))
+      decode.success(depth:, note:)
+    }
       _ -> decode.fail("DataElement")
     }
   }))

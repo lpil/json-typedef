@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: codegen_type_int32
 file: ./test/json_typedef_test.gleam
 test_name: codegen_type_int32_test
@@ -8,7 +8,7 @@ RootSchema([], Type(False, [], Int32))
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 
 pub fn data_decoder() -> decode.Decoder(Int) {

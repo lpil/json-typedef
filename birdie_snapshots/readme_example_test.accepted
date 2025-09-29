@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: readme_example_test
 file: ./test/json_typedef_test.gleam
 test_name: readme_example_test
@@ -33,7 +33,7 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 
 pub type Data {
@@ -46,17 +46,11 @@ pub type Data {
 }
 
 pub fn data_decoder() -> decode.Decoder(Data) {
-  decode.into({
-    use created_at <- decode.parameter
-    use id <- decode.parameter
-    use is_admin <- decode.parameter
-    use karma <- decode.parameter
-    Data(created_at:, id:, is_admin:, karma:)
-  })
-  |> decode.field("createdAt", decode.string)
-  |> decode.field("id", decode.string)
-  |> decode.field("isAdmin", decode.bool)
-  |> decode.field("karma", decode.int)
+  use created_at <- decode.field("createdAt", decode.string)
+  use id <- decode.field("id", decode.string)
+  use is_admin <- decode.field("isAdmin", decode.bool)
+  use karma <- decode.field("karma", decode.int)
+  decode.success(created_at:, id:, is_admin:, karma:)
 }
 
 pub fn data_to_json(data: Data) -> json.Json {

@@ -1,5 +1,5 @@
 ---
-version: 1.2.1
+version: 1.2.7
 title: codegen_ref_as_elements_test
 file: ./test/json_typedef_test.gleam
 test_name: codegen_ref_as_elements_test
@@ -15,7 +15,7 @@ RootSchema(
 
 -----------------------------------------------------------
 
-import decode
+import gleam/dynamic/decode
 import gleam/json
 
 pub fn data_decoder() -> decode.Decoder(List(Thing)) {
