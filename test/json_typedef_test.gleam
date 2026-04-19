@@ -19,14 +19,14 @@ pub fn readme_example_test() {
     \"isAdmin\": { \"type\": \"boolean\" }
   }
 }"
-  let assert Ok(schema) = json.decode(json, json_typedef.decoder)
+  let assert Ok(schema) = json.parse(json, json_typedef.decoder())
   schema
   |> to_encoder_and_decoder
   |> birdie.snap("readme_example_test")
 }
 
 fn test_decode(json: String) -> String {
-  let result = json.decode(json, json_typedef.decoder)
+  let result = json.parse(json, json_typedef.decoder())
   json <> "\n\n" <> pprint.format(result)
 }
 
@@ -376,7 +376,7 @@ pub fn to_json_type_metadata_test() {
     [],
     Type(
       nullable: False,
-      metadata: [#("documentation", dynamic.from("Hello, Joe!"))],
+      metadata: [#("documentation", dynamic.string("Hello, Joe!"))],
       type_: json_typedef.String,
     ),
   )

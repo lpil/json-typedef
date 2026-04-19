@@ -93,7 +93,7 @@ like this:
 import gleam/json
 import json_typedef
 
-let assert Ok(root_schema) = json.decode(json_schema, json_typedef.decoder)
+let assert Ok(root_schema) = json.parse(json_schema, json_typedef.decoder)
 ```
 
 Once you have your `root_schema` you can then generate your encoders and or
